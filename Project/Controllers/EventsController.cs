@@ -4,15 +4,23 @@ using Project.Models;
 namespace Project.Controllers
 {
     [ApiController]
-    [Route("/api/[controller]")]
+    [Route("/[controller]")]
     public class EventsController (IEventService eventService) : Controller
     {
+        /// <summary>
+        /// Получение списка событий
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         public IActionResult Get()
         {
             return Ok(eventService.GetAllEvents());
         }
-        
+        /// <summary>
+        /// Получение события по id
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         [HttpGet("{id}")]
         public IActionResult Get(int id)
         {
@@ -20,22 +28,38 @@ namespace Project.Controllers
             if (evente == null) return NotFound();
             return Ok(evente);
         }
-
+        /// <summary>
+        /// Создание события
+        /// </summary>
+        /// <param name="createEventDto"></param>
+        /// <returns></returns>
         [HttpPost]
-        public IActionResult Create(Event evente)
+        public IActionResult Create([FromBody] CreateEventDto createEventDto)
         {
-            eventService.CreateEvent(evente);
-            return new CreatedResult();
+            if (!ModelState.IsValid) return BadRequest();
+            eventService.CreateEvent(createEventDto);
+            Event ev = eventService.GetLastEvent();
+            //return new CreatedAtActionResult(nameof(Get), nameof(Get), new {id = ev.Id}, ev);
+            return CreatedAtAction(nameof(Create), new {id = ev.Id}, ev);
         }
-
+        /// <summary>
+        /// Обновление события
+        /// </summary>
+        /// <param name="id">Id события</param>
+        /// <param name="evente"></param>
+        /// <returns></returns>
         [HttpPut("{id}")]
-        public IActionResult Update(int id, [FromBody]Event evente)
+        public IActionResult Update(int id, [FromBody]UpdateEventDto updateEventDto)
         {
             if (eventService.GetEventById(id) == null) return NotFound();
-            eventService.UpdateEvent(id, evente);
+            eventService.UpdateEvent(id, updateEventDto);
             return new NoContentResult();
         }
-
+        /// <summary>
+        /// Удаление события по Id
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {

@@ -2,7 +2,9 @@
 
 namespace Project.Models
 {
-    [DateValidation(ErrorMessage = "Дата окончания события неверная")]
+    /// <summary>
+    /// Событие
+    /// </summary>
     public class Event
     {
         public int Id { get; set; }
@@ -10,8 +12,8 @@ namespace Project.Models
         public required string Title { get; set; }
         public string? Description { get; set; }
         [Required]
-        public required DateTime StartAt { get; set; }
+        public required DateTime? StartAt { get; set; }
         [Required]
-        public required DateTime EndAt { get; set; }
+        public required DateTime? EndAt { get; set; }
     }
 }

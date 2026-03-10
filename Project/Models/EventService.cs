@@ -1,11 +1,11 @@
-﻿
-namespace Project.Models
+﻿namespace Project.Models
 {
     public class EventService : IEventService
     {
+
         private static readonly List<Event> events = new List<Event>()
         {
-            new Event() 
+            new Event()
             {
                 Id = 1,
                 Title="имя",
@@ -22,36 +22,77 @@ namespace Project.Models
                 EndAt = DateTime.Now.AddDays(3)
             }
         };
-        public void CreateEvent(Event evente)
+        /// <summary>
+        /// Создать событие
+        /// </summary>
+        /// <param name="createEventDto"></param>
+        /// <returns></returns>
+        public void CreateEvent(CreateEventDto createEventDto)
         {
+            Event evente = new Event()
+            {
+                Id = events.Select(e => e.Id).Max() + 1,
+                Title = createEventDto.Title,
+                Description = createEventDto.Description,
+                StartAt = createEventDto.StartAt,
+                EndAt = createEventDto.EndAt,
+            };
             events.Add(evente);
         }
-
+        /// <summary>
+        /// Удаление события по id
+        /// </summary>
+        /// <param name="id"></param>
         public void DeleteEvent(int id)
         {
             Event? evente = GetEventById(id);
-            if (evente != null ) events.Remove(evente);
+            if (evente != null) events.Remove(evente);
         }
-
+        /// <summary>
+        /// Получить все события
+        /// </summary>
+        /// <returns></returns>
         public IEnumerable<Event> GetAllEvents()
         {
-            return events;
+            return events.Cast<Event>();
         }
-
+        /// <summary>
+        /// Получить событие по id
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         public Event? GetEventById(int id)
         {
-            return events.FirstOrDefault(e => e.Id == id);
+            return events.FirstOrDefault(e => e.Id == id) as Event;
         }
-
-        public void UpdateEvent(int id, Event evente)
+        /// <summary>
+        /// Обновить событие
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="updateEventDto"></param>
+        public void UpdateEvent(int id, UpdateEventDto updateEventDto)
         {
             Event? eventToUpdate = GetEventById(id);
-
             if (eventToUpdate != null)
             {
                 int index = events.IndexOf(eventToUpdate);
-                events[index] = evente;
+                events[index] = new Event()
+                {
+                    Id = id,
+                    Title = updateEventDto.Title,
+                    Description = updateEventDto.Description,
+                    StartAt = updateEventDto.StartAt,
+                    EndAt = updateEventDto.EndAt,
+                }; ;
             }
+        }
+        /// <summary>
+        /// Получить последнее событие
+        /// </summary>
+        /// <returns></returns>
+        public Event GetLastEvent()
+        {
+            return events.Last();
         }
     }
 }
