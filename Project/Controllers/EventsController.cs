@@ -25,7 +25,7 @@ namespace Project.Controllers
         public IActionResult Get(int id)
         {
             var evente = eventService.GetEventById(id);
-            if (evente == null) return NotFound();
+            //if (evente == null) return NotFound();
             return Ok(evente);
         }
         /// <summary>
@@ -66,6 +66,27 @@ namespace Project.Controllers
             if (eventService.GetEventById(id) == null) return NotFound();
             eventService.DeleteEvent(id);
             return new OkResult();
+        }
+        /// <summary>
+        /// Фильтр событий
+        /// </summary>
+        /// <param name="title">регистронезависимое имя</param>
+        /// <param name="from">дата начала</param>
+        /// <param name="to">дата конца</param>
+        /// <param name="page">1</param>
+        /// <param name="pageSize">10</param>
+        /// <returns></returns>
+        [HttpGet("filter")]
+        public IActionResult GetFilteredEvents(
+            [FromQuery] string title = null,
+            [FromQuery] DateTime? from = null,
+            [FromQuery] DateTime? to = null,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
+        {
+            var events = eventService.GetFilteredEvents(title, from, to, page, pageSize);
+
+            return Ok(events);
         }
     }
 }
