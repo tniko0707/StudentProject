@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.ComponentModel.DataAnnotations;
 
 namespace Project.Models
 {
@@ -40,6 +41,10 @@ namespace Project.Models
         /// <returns></returns>
         public void CreateEvent(CreateEventDto createEventDto)
         {
+            if (createEventDto.StartAt > createEventDto.EndAt)
+            {
+                throw new ValidationException();
+            }
             Event evente = new Event()
             {
                 Id = events.Select(e => e.Id).Max() + 1,
@@ -76,6 +81,7 @@ namespace Project.Models
         {
             //return events.FirstOrDefault(e => e.Id == id) as Event;
             return events.First(e => e.Id == id) as Event;//заглушка для теста
+
         }
         /// <summary>
         /// Обновить событие
@@ -84,6 +90,10 @@ namespace Project.Models
         /// <param name="updateEventDto"></param>
         public void UpdateEvent(int id, UpdateEventDto updateEventDto)
         {
+            if (updateEventDto.StartAt > updateEventDto.EndAt)
+            {
+                throw new ValidationException();
+            }
             Event? eventToUpdate = GetEventById(id);
             if (eventToUpdate != null)
             {
@@ -130,19 +140,19 @@ namespace Project.Models
 
             if (from != null)
             {
-                events = events.Where(e => e.StartAt <= from.Value);
+                events = events.Where(e => e.StartAt >= from.Value);
             }
 
             if (to != null)
             {
-                events = events.Where(e => e.EndAt >= to.Value);
+                events = events.Where(e => e.EndAt <= to.Value);
             }
-
+            //Общее число страниц/записей нужно считать по полной отфильтрованной выборке до Skip/Take
+            int totalPages = (int)Math.Ceiling((double)events.Count() / pageSize);
+            
             events = events.Skip((page - 1) * pageSize).Take(pageSize);
 
-            int totalPages = (int)Math.Ceiling((double)events.Count() / pageSize);
-
-            return new PaginatedResult(events.ToList(), totalPages, page, pageSize);
+            return new PaginatedResult(events.Count(), events.ToList(), page, pageSize);
         }
     }
 }

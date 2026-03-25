@@ -5,18 +5,20 @@
     /// </summary>
     public class PaginatedResult
     {
-        public List<Event> Events { get; set; }
-        public int TotalPages {  get; set; }
-        public int Page {  get; set; }
-        public int PageSize { get; set; }
-
-
-        public PaginatedResult(List<Event> events, int totalPages, int page, int pageSize)
+        public PaginatedResult(int eventCounter, List<Event> events, int currentPage, int elementsOnPage)
         {
+            EventCounter = eventCounter;
             Events = events;
-            TotalPages = totalPages;
-            Page = page;
-            PageSize = pageSize;
+            CurrentPage = currentPage;
+            ElementsOnPage = elementsOnPage;
         }
+
+        public int EventCounter { get; set; }
+        public List<Event> Events { get; set; }
+        public int CurrentPage {  get; set; }
+        public int ElementsOnPage { get; set; }
+
+
+
     }
 }

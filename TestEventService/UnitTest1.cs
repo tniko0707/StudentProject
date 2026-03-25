@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using Project.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace TestEventService
 {
@@ -86,11 +87,13 @@ namespace TestEventService
         [Fact]
         public void DeleteEventTest()
         {
+            //arrange
+            int id = 3;
             //act
-            _eventService.DeleteEvent(3);
+            _eventService.DeleteEvent(id);
 
             //assert
-            Assert.True(_eventService.GetAllEvents().Count() == 2);
+            Assert.True(!_eventService.GetAllEvents().Any(e => e.Id == id));
         }
         /// <summary>
         /// фильтрация по названию
@@ -114,7 +117,7 @@ namespace TestEventService
         public void FilterByDate_ShouldReturnPaginationResult()
         {
             //arrange
-            DateTime fromd = DateTime.Now.AddDays(1);
+            DateTime fromd = DateTime.Now.AddDays(-1);
             DateTime tod = DateTime.Now.AddDays(2);
 
             //act
@@ -143,7 +146,7 @@ namespace TestEventService
         {
             //act
             var result = _eventService.GetFilteredEvents("имя", 
-                DateTime.Now.AddDays(1),
+                DateTime.Now.AddDays(-1),
                 DateTime.Now.AddDays(2),
                 1,
                 2);
@@ -173,7 +176,7 @@ namespace TestEventService
             //arrange
             var createdEventDTO = new UpdateEventDto()
             {
-                Title = "тест",
+                Title = "UpdateEventWithErrorId",
                 Description = "описание",
                 StartAt = DateTime.Now,
                 EndAt = DateTime.Now.AddDays(1)
@@ -184,6 +187,41 @@ namespace TestEventService
 
             //assert
             Assert.NotNull(exception);
+        }
+        /// <summary>
+        /// обновление события с EndAt раньше StartAt
+        /// </summary>
+        [Fact]
+        public void UpdateEventWithErrorDate()
+        {
+            //arrange
+            var createdEventDTO = new UpdateEventDto()
+            {
+                Title = "UpdateEventWithErrorDate",
+                Description = "описание",
+                StartAt = DateTime.Now.AddDays(3),
+                EndAt = DateTime.Now.AddDays(1)
+            };
+            int id = 3;
+            //act assert
+            var exception = Assert.Throws<ValidationException>(() => _eventService.UpdateEvent(id, createdEventDTO));
+        }
+        /// <summary>
+        /// создание с некорректными данными
+        /// </summary>
+        [Fact]
+        public void CreateEventWithDataError()
+        {
+            //arrange
+            var createdEventDTO = new CreateEventDto()
+            {
+                Title = "CreateEventWithDataError",
+                Description = "описание",
+                StartAt = DateTime.Now.AddDays(3),
+                EndAt = DateTime.Now.AddDays(1)
+            };
+            //act assert
+            var exception = Assert.Throws<ValidationException>(() => _eventService.CreateEvent(createdEventDTO));
         }
     }
 }

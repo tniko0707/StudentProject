@@ -23,10 +23,28 @@ namespace Project.Models
             {
                 await _next(httpContext);
             }
+            catch (ValidationException ex)
+            {
+                await HandleValidationException(httpContext, ex);
+            }
             catch (Exception ex)
             {
                 await HandleExceptionAsync(httpContext, ex);
             }
+        }
+        private async Task HandleValidationException(HttpContext httpContext, Exception ex)
+        {
+            _logger.LogError(ex, "Validation exception");
+
+            httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
+            httpContext.Response.ContentType = "application/json";
+
+            var error = new ProblemDetails
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Detail = ex.Message
+            };
+            await httpContext.Response.WriteAsJsonAsync(error);
         }
         private async Task HandleExceptionAsync(HttpContext httpContext, Exception ex)
         {
