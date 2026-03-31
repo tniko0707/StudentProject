@@ -48,7 +48,15 @@ namespace Project.Controllers
         [HttpPost]
         public IActionResult Create([FromBody] CreateEventDto createEventDto)
         {
-            if (!ModelState.IsValid) return BadRequest();
+            //if (!ModelState.IsValid) return BadRequest();
+            if (!ModelState.IsValid)
+            {
+                var problemDetails = new ValidationProblemDetails(ModelState)
+                {
+                    Status = StatusCodes.Status400BadRequest,
+                };
+                return BadRequest(problemDetails);
+            }
             eventService.CreateEvent(createEventDto);
             Event ev = eventService.GetLastEvent();
             //return new CreatedAtActionResult(nameof(Get), nameof(Get), new {id = ev.Id}, ev);

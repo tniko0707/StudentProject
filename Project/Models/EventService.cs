@@ -149,10 +149,10 @@ namespace Project.Models
             }
             //Общее число страниц/записей нужно считать по полной отфильтрованной выборке до Skip/Take
             int totalPages = (int)Math.Ceiling((double)events.Count() / pageSize);
-            
+            int totalEvents = events.Count();
             events = events.Skip((page - 1) * pageSize).Take(pageSize);
 
-            return new PaginatedResult(events.Count(), events.ToList(), page, pageSize);
+            return new PaginatedResult(totalEvents, events.ToList(), page, pageSize);
         }
     }
 }
