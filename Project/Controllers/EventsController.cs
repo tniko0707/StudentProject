@@ -8,13 +8,25 @@ namespace Project.Controllers
     public class EventsController (IEventService eventService) : Controller
     {
         /// <summary>
-        /// Получение списка событий
+        /// Получение событий через фильтр событий
         /// </summary>
+        /// <param name="title">регистронезависимое имя</param>
+        /// <param name="from">дата начала</param>
+        /// <param name="to">дата конца</param>
+        /// <param name="page">1</param>
+        /// <param name="pageSize">10</param>
         /// <returns></returns>
         [HttpGet]
-        public IActionResult Get()
+        public IActionResult Get(
+            [FromQuery] string title = null,
+            [FromQuery] DateTime? from = null,
+            [FromQuery] DateTime? to = null,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
         {
-            return Ok(eventService.GetAllEvents());
+            var events = eventService.GetFilteredEvents(title, from, to, page, pageSize);
+
+            return Ok(events);
         }
         /// <summary>
         /// Получение события по id
@@ -25,7 +37,7 @@ namespace Project.Controllers
         public IActionResult Get(int id)
         {
             var evente = eventService.GetEventById(id);
-            if (evente == null) return NotFound();
+            //if (evente == null) return NotFound();
             return Ok(evente);
         }
         /// <summary>
@@ -36,7 +48,15 @@ namespace Project.Controllers
         [HttpPost]
         public IActionResult Create([FromBody] CreateEventDto createEventDto)
         {
-            if (!ModelState.IsValid) return BadRequest();
+            //if (!ModelState.IsValid) return BadRequest();
+            if (!ModelState.IsValid)
+            {
+                var problemDetails = new ValidationProblemDetails(ModelState)
+                {
+                    Status = StatusCodes.Status400BadRequest,
+                };
+                return BadRequest(problemDetails);
+            }
             eventService.CreateEvent(createEventDto);
             Event ev = eventService.GetLastEvent();
             //return new CreatedAtActionResult(nameof(Get), nameof(Get), new {id = ev.Id}, ev);
