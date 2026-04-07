@@ -15,7 +15,7 @@ namespace Project.Models
         /// <param name="eventId"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public async Task<Booking?> CreateBookingAsync(int eventId)
+        public async Task<Booking?> CreateBookingAsync(Guid eventId)
         {
             Booking booking = await _repository.AddAsync(eventId);
             return booking;
@@ -25,7 +25,7 @@ namespace Project.Models
         /// </summary>
         /// <param name="bookingId"></param>
         /// <returns></returns>
-        public async Task<Booking?> GetBookingByIdAsync(int bookingId)
+        public async Task<Booking?> GetBookingByIdAsync(Guid bookingId)
         {
             try
             {
@@ -41,7 +41,7 @@ namespace Project.Models
         /// </summary>
         /// <param name="bookingId"></param>
         /// <returns></returns>
-        public async Task ConfirmBooking(int bookingId)
+        public async Task ConfirmBooking(Guid bookingId)
         {
             var b = await _repository.FindByIdAsync(bookingId);
             if (b != null) b.Status = BookingStatus.Confirmed;

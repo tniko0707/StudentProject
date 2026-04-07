@@ -8,9 +8,9 @@ namespace Project.Models
     public class Booking
     {
         [Required]
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         [Required]
-        public int EventId {  get; set; }
+        public Guid EventId {  get; set; }
         [Required]
         public BookingStatus Status { get; set; }
         [Required]

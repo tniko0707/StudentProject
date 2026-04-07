@@ -7,7 +7,7 @@ namespace Project.Models
     /// </summary>
     public class Event
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         [Required]
         public required string Title { get; set; }
         public string? Description { get; set; }

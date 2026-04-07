@@ -3,10 +3,10 @@
     public interface IEventService
     {
         IEnumerable<Event> GetAllEvents();
-        Event? GetEventById(int id);
+        Event? GetEventById(Guid id);
         void CreateEvent(CreateEventDto createEventDto);
-        void UpdateEvent(int id, UpdateEventDto updateEventDto);
-        void DeleteEvent(int id);
+        void UpdateEvent(Guid id, UpdateEventDto updateEventDto);
+        void DeleteEvent(Guid id);
         Event GetLastEvent();
         PaginatedResult GetFilteredEvents(
             string title = null,

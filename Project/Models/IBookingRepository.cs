@@ -2,7 +2,11 @@
 {
     public interface IBookingRepository
     {
-        Task<Booking?> FindByIdAsync(int id);
-        Task<Booking> AddAsync(int eventId);
+        Task<Booking?> FindByIdAsync(Guid id);
+        Task<Booking> AddAsync(Guid eventId);
+        Task<List<Booking>> GetAllAsync();
+        Task<IEnumerable<Booking>> GetAllPendingAsync();
+        Task<Booking> GetLastBookingAsync();
+
     }
 }

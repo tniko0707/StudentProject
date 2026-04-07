@@ -59,7 +59,7 @@ namespace TestEventService
         {
 
             //act
-            var result = _eventService.GetEventById(3);
+            var result = _eventService.GetEventById(_eventService.GetLastEvent().Id);
 
             //assert
             Assert.NotNull(result);
@@ -78,9 +78,9 @@ namespace TestEventService
                 StartAt = DateTime.Now,
                 EndAt = DateTime.Now.AddDays(1)
             };
-            int id = 3;
+            Guid id = _eventService.GetLastEvent().Id;
             //act
-            _eventService.UpdateEvent(3, createdEventDTO);
+            _eventService.UpdateEvent(id, createdEventDTO);
 
             //assert
             Assert.True(_eventService.GetAllEvents().Any(e => e.Title == "тест"));
@@ -92,7 +92,7 @@ namespace TestEventService
         public void DeleteEventTest()
         {
             //arrange
-            int id = 3;
+            Guid id = _eventService.GetLastEvent().Id;
             //act
             _eventService.DeleteEvent(id);
 
@@ -163,7 +163,7 @@ namespace TestEventService
         public void GetEventWithErrorId()
         {
             //arrange
-            int id = 55;
+            Guid id = Guid.NewGuid();
 
             //act
             var exception = Record.Exception(() => _eventService.GetEventById(id));
@@ -185,7 +185,7 @@ namespace TestEventService
                 StartAt = DateTime.Now,
                 EndAt = DateTime.Now.AddDays(1)
             };
-            int id = 55;
+            Guid id = Guid.NewGuid();
             //act
             var exception = Record.Exception(() => _eventService.UpdateEvent(id, createdEventDTO));
 
@@ -206,7 +206,7 @@ namespace TestEventService
                 StartAt = DateTime.Now.AddDays(3),
                 EndAt = DateTime.Now.AddDays(1)
             };
-            int id = 3;
+            Guid id = _eventService.GetLastEvent().Id;
             //act assert
             var exception = Assert.Throws<ValidationException>(() => _eventService.UpdateEvent(id, createdEventDTO));
         }

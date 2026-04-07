@@ -11,7 +11,7 @@ namespace Project.Models
         {
             new Event()
             {
-                Id = 1,
+                Id = Guid.NewGuid(),
                 Title="имя",
                 Description="описание",
                 StartAt = DateTime.Now,
@@ -19,7 +19,7 @@ namespace Project.Models
             },
             new Event()
             {
-                Id = 2,
+                Id = Guid.NewGuid(),
                 Title="имя2",
                 Description="описание2",
                 StartAt = DateTime.Now,
@@ -27,7 +27,7 @@ namespace Project.Models
             },
             new Event()
             {
-                Id = 3,
+                Id = Guid.NewGuid(),
                 Title="имя3",
                 Description="описание3",
                 StartAt = DateTime.Now,
@@ -47,7 +47,7 @@ namespace Project.Models
             }
             Event evente = new Event()
             {
-                Id = events.Select(e => e.Id).Max() + 1,
+                Id = Guid.NewGuid(),
                 Title = createEventDto.Title,
                 Description = createEventDto.Description,
                 StartAt = createEventDto.StartAt,
@@ -59,7 +59,7 @@ namespace Project.Models
         /// Удаление события по id
         /// </summary>
         /// <param name="id"></param>
-        public void DeleteEvent(int id)
+        public void DeleteEvent(Guid id)
         {
             Event? evente = GetEventById(id);
             if (evente != null) events.Remove(evente);
@@ -77,7 +77,7 @@ namespace Project.Models
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public Event? GetEventById(int id)
+        public Event? GetEventById(Guid id)
         {
             //return events.FirstOrDefault(e => e.Id == id) as Event;
             return events.First(e => e.Id == id) as Event;//заглушка для теста
@@ -88,7 +88,7 @@ namespace Project.Models
         /// </summary>
         /// <param name="id"></param>
         /// <param name="updateEventDto"></param>
-        public void UpdateEvent(int id, UpdateEventDto updateEventDto)
+        public void UpdateEvent(Guid id, UpdateEventDto updateEventDto)
         {
             if (updateEventDto.StartAt > updateEventDto.EndAt)
             {

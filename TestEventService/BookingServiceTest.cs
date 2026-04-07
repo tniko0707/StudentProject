@@ -21,15 +21,14 @@ namespace TestEventService
         public async Task CreateBooking_ShouldReturnBookingInfo()
         {
             //arrange
+            Guid eventId = _eventService.GetLastEvent().Id;
             var booking = new Booking()
             {
-                Id = 3,
-                EventId = 3,
+                Id = Guid.NewGuid(),
+                EventId = eventId,
                 Status = BookingStatus.Pending,
                 CreatedAt = DateTime.Now.AddHours(-2),
-                ProcessedAt = DateTime.Now.AddHours(-1),
             };
-            int eventId = 3;
             _mockRepository.Setup(m => m.AddAsync(eventId)).ReturnsAsync(booking);
 
             //act
@@ -42,20 +41,20 @@ namespace TestEventService
         [Fact]
         public async Task GetBookingById_ReturnBooking()
         {
+            Guid eventId = _eventService.GetLastEvent().Id;
             //arrange
             var booking = new Booking()
             {
-                Id = 2,
-                EventId = 2,
+                Id = Guid.NewGuid(),
+                EventId = Guid.NewGuid(),
                 Status = BookingStatus.Pending,
                 CreatedAt = DateTime.Now.AddHours(-2),
                 ProcessedAt = DateTime.Now.AddHours(-1),
             };
-            int bookingId = 2;
-            _mockRepository.Setup(m => m.FindByIdAsync(bookingId)).ReturnsAsync(booking);
+            _mockRepository.Setup(m => m.FindByIdAsync(booking.Id)).ReturnsAsync(booking);
 
             //act
-            var result = await _bookingService.GetBookingByIdAsync(bookingId);
+            var result = await _bookingService.GetBookingByIdAsync(booking.Id);
 
             //assert
             Assert.Equal(booking, result);
@@ -64,17 +63,16 @@ namespace TestEventService
         public async Task CreateSeveralBookingsForOneEvent_AllIdsUnique()
         {
             //arrange
-            int eventId = 2;
+            Guid eventId = _eventService.GetLastEvent().Id;
             int bookingId = 0;
             _mockRepository
-                .Setup(m => m.AddAsync(It.IsAny<int>()))
-                .ReturnsAsync((int eventId) => new Booking
+                .Setup(m => m.AddAsync(It.IsAny<Guid>()))
+                .ReturnsAsync((Guid eventId) => new Booking
                 {
-                    Id = bookingId++,
+                    Id = Guid.NewGuid(),
                     EventId = eventId,
                     Status = BookingStatus.Confirmed,
                     CreatedAt = DateTime.Now,
-                    ProcessedAt = DateTime.Now
                 });
             //act
 
@@ -90,12 +88,12 @@ namespace TestEventService
         {
             //arrange
 
-            var bookingId = 2;
+            var bookingId = Guid.NewGuid();
             var booking = new Booking { Id = bookingId, Status = BookingStatus.Pending };
             _mockRepository.Setup(m => m.FindByIdAsync(bookingId)).ReturnsAsync(booking);
 
             //act
-            await _bookingService.ConfirmBooking(bookingId);
+            await _bookingService.ConfirmBooking(booking.Id);
             var updatedBooking = await _bookingService.GetBookingByIdAsync(bookingId);
 
             //assert
@@ -107,7 +105,7 @@ namespace TestEventService
         {
             //arrange
 
-            int eventId = 45;
+            Guid eventId = Guid.NewGuid();
             _mockRepository.Setup(m => m.AddAsync(eventId)).ReturnsAsync((Booking)null);
 
             //act
@@ -118,8 +116,8 @@ namespace TestEventService
         public async Task GetBookingWithWrongId()
         {
             //arrange
-            int id = 34;
-            _mockRepository.Setup(repo => repo.FindByIdAsync(It.IsAny<int>()))
+            Guid id = Guid.NewGuid();
+            _mockRepository.Setup(repo => repo.FindByIdAsync(It.IsAny<Guid>()))
                 .Throws(new InvalidOperationException());
 
             //act

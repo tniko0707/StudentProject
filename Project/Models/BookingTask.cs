@@ -2,7 +2,7 @@
 {
     public class BookingTask
     {
-        public int Id { get; set; } //booking Id
+        public Guid Id { get; set; } //booking Id
         public DateTime CreatedAt { get; set; }
     }
 }

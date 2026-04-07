@@ -45,5 +45,11 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+app.MapControllerRoute(
+    name: "GetBooking",
+    pattern: "bookings/{bookingId}",
+    defaults: new { controller = "Bookings", action = "Get" }
+);
+
 
 app.Run();

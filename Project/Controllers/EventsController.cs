@@ -45,7 +45,7 @@ namespace Project.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("{id}")]
-        public IActionResult Get(int id)
+        public IActionResult Get(Guid id)
         {
             var evente = _eventService.GetEventById(id);
             //if (evente == null) return NotFound();
@@ -80,7 +80,7 @@ namespace Project.Controllers
         /// <param name="evente"></param>
         /// <returns></returns>
         [HttpPut("{id}")]
-        public IActionResult Update(int id, [FromBody]UpdateEventDto updateEventDto)
+        public IActionResult Update(Guid id, [FromBody]UpdateEventDto updateEventDto)
         {
             if (_eventService.GetEventById(id) == null) return NotFound();
             _eventService.UpdateEvent(id, updateEventDto);
@@ -92,7 +92,7 @@ namespace Project.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        public IActionResult Delete(Guid id)
         {
             if (_eventService.GetEventById(id) == null) return NotFound();
             _eventService.DeleteEvent(id);
@@ -105,7 +105,7 @@ namespace Project.Controllers
         /// <param name = "eventId" > id события</param>
         /// <returns> Бронь </returns >
         [HttpPost("{eventId}/book")]
-        public async Task<IActionResult> CreateBookingAsync(int eventId)
+        public async Task<IActionResult> CreateBookingAsync(Guid eventId)
         {
             if (_eventService.GetEventById(eventId) == null) return NotFound();
 
@@ -113,7 +113,7 @@ namespace Project.Controllers
 
             _bookingTaskQueue.Enqueue(new BookingTask() { Id = booking.Id, CreatedAt = DateTime.Now });
 
-            return AcceptedAtAction(nameof(Get), new { bookingId = booking.Id }, booking);
+            return AcceptedAtRoute("GetBooking", new { bookingId = booking.Id }, booking);
         }
 
     }

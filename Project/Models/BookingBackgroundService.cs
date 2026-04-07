@@ -23,21 +23,26 @@
             {
                 try
                 {
-                    if (_taskQueue.TryDequeue(out BookingTask bookingTask))
-                    {
-                        _logger.LogInformation($"Начата обработка брони {bookingTask.Id}");
+                    #region Обработка через опрос
+                    await FindPendingBookings(stoppingToken);
+                    #endregion
+                    #region Обработка через очередь
+                    //if (_taskQueue.TryDequeue(out BookingTask bookingTask))
+                    //{
+                    //    _logger.LogInformation($"Начата обработка брони {bookingTask.Id}");
 
-                        await Task.Delay(2000, stoppingToken);
+                    //    await Task.Delay(2000, stoppingToken);
 
-                        var booking = await _bookingRepository.FindByIdAsync(bookingTask.Id);
-                        if (booking != null) 
-                        { 
-                            booking.Status = BookingStatus.Confirmed;
-                            booking.ProcessedAt = DateTime.Now;
-                        }
+                    //    var booking = await _bookingRepository.FindByIdAsync(bookingTask.Id);
+                    //    if (booking != null) 
+                    //    { 
+                    //        booking.Status = BookingStatus.Confirmed;
+                    //        booking.ProcessedAt = DateTime.Now;
+                    //    }
 
-                        _logger.LogInformation($"Бронь {bookingTask.Id} обработана");
-                    }
+                    //    _logger.LogInformation($"Бронь {bookingTask.Id} обработана");
+                    //}
+                    #endregion
                 }
                 catch (Exception ex)
                 {
@@ -47,6 +52,20 @@
             }
 
             _logger.LogInformation("BookingBackgroundService остановлен");
+        }
+
+        private async Task FindPendingBookings(CancellationToken cancellationToken)
+        {
+            var pendingBookings = await _bookingRepository.GetAllPendingAsync();
+            foreach (var pendingBooking in pendingBookings)
+            {
+                _logger.LogInformation($"Начата обработка брони {pendingBooking.Id}");
+                pendingBooking.Status = BookingStatus.Confirmed;
+                pendingBooking.ProcessedAt = DateTime.Now;
+                await Task.Delay(2000, cancellationToken);
+
+                _logger.LogInformation($"Бронь {pendingBooking.Id} обработана");
+            }
         }
     }
 }
