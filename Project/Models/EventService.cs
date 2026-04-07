@@ -129,7 +129,8 @@ namespace Project.Models
             DateTime? from = null,
             DateTime? to = null,
             int page = 1,
-            int pageSize = 10)
+            int pageSize 
+            = 10)
         {
             var events = this.GetAllEvents();
 

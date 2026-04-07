@@ -5,8 +5,19 @@ namespace Project.Controllers
 {
     [ApiController]
     [Route("/[controller]")]
-    public class EventsController (IEventService eventService) : Controller
+    public class EventsController : Controller
     {
+        private readonly IEventService _eventService;
+        private readonly IBookingService _bookingService;
+        private readonly IBookingTaskQueue _bookingTaskQueue;
+
+        public EventsController(IEventService eventService, IBookingService bookingService, IBookingTaskQueue bookingTaskQueue)
+        {
+            _eventService = eventService;
+            _bookingService = bookingService;
+            _bookingTaskQueue = bookingTaskQueue;
+        }
+
         /// <summary>
         /// Получение событий через фильтр событий
         /// </summary>
@@ -24,7 +35,7 @@ namespace Project.Controllers
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 10)
         {
-            var events = eventService.GetFilteredEvents(title, from, to, page, pageSize);
+            var events = _eventService.GetFilteredEvents(title, from, to, page, pageSize);
 
             return Ok(events);
         }
@@ -36,7 +47,7 @@ namespace Project.Controllers
         [HttpGet("{id}")]
         public IActionResult Get(int id)
         {
-            var evente = eventService.GetEventById(id);
+            var evente = _eventService.GetEventById(id);
             //if (evente == null) return NotFound();
             return Ok(evente);
         }
@@ -57,8 +68,8 @@ namespace Project.Controllers
                 };
                 return BadRequest(problemDetails);
             }
-            eventService.CreateEvent(createEventDto);
-            Event ev = eventService.GetLastEvent();
+            _eventService.CreateEvent(createEventDto);
+            Event ev = _eventService.GetLastEvent();
             //return new CreatedAtActionResult(nameof(Get), nameof(Get), new {id = ev.Id}, ev);
             return CreatedAtAction(nameof(Create), new {id = ev.Id}, ev);
         }
@@ -71,8 +82,8 @@ namespace Project.Controllers
         [HttpPut("{id}")]
         public IActionResult Update(int id, [FromBody]UpdateEventDto updateEventDto)
         {
-            if (eventService.GetEventById(id) == null) return NotFound();
-            eventService.UpdateEvent(id, updateEventDto);
+            if (_eventService.GetEventById(id) == null) return NotFound();
+            _eventService.UpdateEvent(id, updateEventDto);
             return new NoContentResult();
         }
         /// <summary>
@@ -83,9 +94,27 @@ namespace Project.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            if (eventService.GetEventById(id) == null) return NotFound();
-            eventService.DeleteEvent(id);
+            if (_eventService.GetEventById(id) == null) return NotFound();
+            _eventService.DeleteEvent(id);
             return new OkResult();
         }
+
+        /// <summary>
+        /// Создание брони для события
+        /// </summary>
+        /// <param name = "eventId" > id события</param>
+        /// <returns> Бронь </returns >
+        [HttpPost("{eventId}/book")]
+        public async Task<IActionResult> CreateBookingAsync(int eventId)
+        {
+            if (_eventService.GetEventById(eventId) == null) return NotFound();
+
+            var booking = await _bookingService.CreateBookingAsync(eventId);
+
+            _bookingTaskQueue.Enqueue(new BookingTask() { Id = booking.Id, CreatedAt = DateTime.Now });
+
+            return AcceptedAtAction(nameof(Get), new { bookingId = booking.Id }, booking);
+        }
+
     }
 }

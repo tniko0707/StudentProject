@@ -13,6 +13,7 @@ namespace TestEventService
         {
             _eventService = new EventService();
         }
+
         /// <summary>
         /// создание события
         /// </summary>
@@ -35,6 +36,9 @@ namespace TestEventService
             Assert.True(_eventService.GetAllEvents().Any(e => e.Title == "тест"));
             //Assert.Contains(_eventService.GetAllEvents(), createdEventDTO);
         }
+
+
+
         /// <summary>
         /// получение всех событий
         /// </summary>
