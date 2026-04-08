@@ -169,7 +169,7 @@ namespace TestEventService
             var exception = Record.Exception(() => _eventService.GetEventById(id));
 
             //assert
-            Assert.NotNull(exception);
+            Assert.Null(exception);
         }
         /// <summary>
         /// обновление события несуществующим ID
@@ -190,7 +190,7 @@ namespace TestEventService
             var exception = Record.Exception(() => _eventService.UpdateEvent(id, createdEventDTO));
 
             //assert
-            Assert.NotNull(exception);
+            Assert.Null(exception);
         }
         /// <summary>
         /// обновление события с EndAt раньше StartAt

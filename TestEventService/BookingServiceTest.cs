@@ -1,5 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Moq;
+using Project.Controllers;
 using Project.Models;
 using System;
 
@@ -101,14 +104,20 @@ namespace TestEventService
         }
 
         [Fact]
-        public async Task CreateBookingWithWrongId()
+        public async Task CreateBookingWithWrongEventId()
         {
             //arrange
 
             Guid eventId = Guid.NewGuid();
-            _mockRepository.Setup(m => m.AddAsync(eventId)).ReturnsAsync((Booking)null);
+            var mockEventService = new Mock<IEventService>();
+            mockEventService.Setup(m => m.GetEventById(eventId)).Returns(null as Event);
 
+            var controller = new EventsController(mockEventService.Object, _bookingService, null);
             //act
+            var eventT = await controller.CreateBookingAsync(eventId);
+
+            //assert
+            Assert.IsType<NotFoundResult>(eventT);
 
         }
 
@@ -117,14 +126,12 @@ namespace TestEventService
         {
             //arrange
             Guid id = Guid.NewGuid();
-            _mockRepository.Setup(repo => repo.FindByIdAsync(It.IsAny<Guid>()))
-                .Throws(new InvalidOperationException());
 
             //act
-            var ex = await Assert.ThrowsAsync<InvalidOperationException>(async () => await _bookingService.GetBookingByIdAsync(id));
+            var booking = await _bookingService.GetBookingByIdAsync(id);
 
             //assert
-            Assert.IsType<InvalidOperationException>(ex.InnerException);
+            Assert.Null(booking);
         }
     }
 }

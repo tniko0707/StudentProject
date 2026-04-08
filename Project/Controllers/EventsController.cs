@@ -48,7 +48,7 @@ namespace Project.Controllers
         public IActionResult Get(Guid id)
         {
             var evente = _eventService.GetEventById(id);
-            //if (evente == null) return NotFound();
+            if (evente == null) return NotFound();
             return Ok(evente);
         }
         /// <summary>
@@ -113,7 +113,7 @@ namespace Project.Controllers
 
             _bookingTaskQueue.Enqueue(new BookingTask() { Id = booking.Id, CreatedAt = DateTime.Now });
 
-            return AcceptedAtRoute("GetBooking", new { bookingId = booking.Id }, booking);
+            return AcceptedAtRoute("GetBooking", new { Id = booking.Id }, booking);
         }
 
     }

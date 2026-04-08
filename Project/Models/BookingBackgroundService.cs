@@ -60,9 +60,9 @@
             foreach (var pendingBooking in pendingBookings)
             {
                 _logger.LogInformation($"Начата обработка брони {pendingBooking.Id}");
+                await Task.Delay(2000, cancellationToken);
                 pendingBooking.Status = BookingStatus.Confirmed;
                 pendingBooking.ProcessedAt = DateTime.Now;
-                await Task.Delay(2000, cancellationToken);
 
                 _logger.LogInformation($"Бронь {pendingBooking.Id} обработана");
             }

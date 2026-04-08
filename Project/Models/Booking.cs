@@ -15,7 +15,6 @@ namespace Project.Models
         public BookingStatus Status { get; set; }
         [Required]
         public DateTime CreatedAt { get; set; }
-        [Required]
         public DateTime? ProcessedAt { get; set; }
     }
 }

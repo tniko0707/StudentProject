@@ -79,8 +79,8 @@ namespace Project.Models
         /// <returns></returns>
         public Event? GetEventById(Guid id)
         {
-            //return events.FirstOrDefault(e => e.Id == id) as Event;
-            return events.First(e => e.Id == id) as Event;//заглушка для теста
+            return events.FirstOrDefault(e => e.Id == id, null) as Event;
+            //return events.First(e => e.Id == id) as Event;//заглушка для теста
 
         }
         /// <summary>

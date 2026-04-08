@@ -22,6 +22,7 @@ namespace Project.Models
                 CreatedAt = DateTime.Now.AddHours(-2),
             }
         ];
+
         public async Task<Booking> AddAsync(Guid eventId)
         {
             Booking newBooking = new ()
@@ -37,14 +38,16 @@ namespace Project.Models
 
         public async Task<Booking?> FindByIdAsync(Guid id)
         {
-            try
-            {
-                return _bookings.First(b => b.Id == id);
-            }
-            catch (InvalidOperationException ex)
-            {
-                throw new InvalidOperationException();
-            }
+            return _bookings.FirstOrDefault(b => b.Id == id, null);
+
+            //try
+            //{
+            //    return _bookings.FirstOrDefault(b => b.Id == id);
+            //}
+            //catch (InvalidOperationException ex)
+            //{
+            //    throw new InvalidOperationException();
+            //}
         }
 
         public async Task<List<Booking>> GetAllAsync()
