@@ -39,15 +39,6 @@ namespace Project.Models
         public async Task<Booking?> FindByIdAsync(Guid id)
         {
             return _bookings.FirstOrDefault(b => b.Id == id, null);
-
-            //try
-            //{
-            //    return _bookings.FirstOrDefault(b => b.Id == id);
-            //}
-            //catch (InvalidOperationException ex)
-            //{
-            //    throw new InvalidOperationException();
-            //}
         }
 
         public async Task<List<Booking>> GetAllAsync()

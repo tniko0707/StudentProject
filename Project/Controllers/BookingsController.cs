@@ -22,15 +22,10 @@ namespace Project.Controllers
         [HttpGet("{id}", Name = "GetBooking")]
         public async Task<IActionResult> Get(Guid id)
         {
-            try
-            {
-                var booking = await bookingService.GetBookingByIdAsync(id);
-                return Ok(booking);
-            }
-            catch (InvalidOperationException ex) 
-            {
-                return NotFound();
-            }
+            var booking = await bookingService.GetBookingByIdAsync(id);
+
+            if (booking == null) return NotFound();
+            return Ok(booking);
         }
     }
 }

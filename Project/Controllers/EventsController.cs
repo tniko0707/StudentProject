@@ -9,13 +9,11 @@ namespace Project.Controllers
     {
         private readonly IEventService _eventService;
         private readonly IBookingService _bookingService;
-        private readonly IBookingTaskQueue _bookingTaskQueue;
 
-        public EventsController(IEventService eventService, IBookingService bookingService, IBookingTaskQueue bookingTaskQueue)
+        public EventsController(IEventService eventService, IBookingService bookingService)
         {
             _eventService = eventService;
             _bookingService = bookingService;
-            _bookingTaskQueue = bookingTaskQueue;
         }
 
         /// <summary>
@@ -110,8 +108,6 @@ namespace Project.Controllers
             if (_eventService.GetEventById(eventId) == null) return NotFound();
 
             var booking = await _bookingService.CreateBookingAsync(eventId);
-
-            _bookingTaskQueue.Enqueue(new BookingTask() { Id = booking.Id, CreatedAt = DateTime.Now });
 
             return AcceptedAtRoute("GetBooking", new { Id = booking.Id }, booking);
         }

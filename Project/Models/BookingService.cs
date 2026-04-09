@@ -27,14 +27,7 @@ namespace Project.Models
         /// <returns></returns>
         public async Task<Booking?> GetBookingByIdAsync(Guid bookingId)
         {
-            try
-            {
-                return await _repository.FindByIdAsync(bookingId);
-            }
-            catch (InvalidOperationException ex)
-            {
-                throw new InvalidOperationException("Error while retrieving booking");
-            }
+            return await _repository.FindByIdAsync(bookingId);
         }
         /// <summary>
         /// Подтверждение брони

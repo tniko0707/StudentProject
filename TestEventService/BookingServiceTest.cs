@@ -112,7 +112,7 @@ namespace TestEventService
             var mockEventService = new Mock<IEventService>();
             mockEventService.Setup(m => m.GetEventById(eventId)).Returns(null as Event);
 
-            var controller = new EventsController(mockEventService.Object, _bookingService, null);
+            var controller = new EventsController(mockEventService.Object, _bookingService);
             //act
             var eventT = await controller.CreateBookingAsync(eventId);
 

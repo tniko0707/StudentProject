@@ -15,7 +15,6 @@ builder.Services.AddSwaggerGen(options =>
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-builder.Services.AddSingleton<IBookingTaskQueue, InMemoryBookingTaskQueue>();
 builder.Services.AddHostedService<BookingBackgroundService>();
 
 builder.Services.AddSingleton<IBookingRepository, BookingRepository>();
