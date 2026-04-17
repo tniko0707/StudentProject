@@ -7,10 +7,6 @@ namespace Project.Models
     /// </summary>
     public class Event
     {
-        public Event()
-        {
-            AvailableSeats = TotalSeats;
-        }
         public Guid Id { get; set; }
         [Required]
         public required string Title { get; set; }

@@ -13,7 +13,8 @@ namespace Project.Models
                 Description="описание",
                 StartAt = DateTime.Now,
                 EndAt = DateTime.Now.AddDays(1),
-                TotalSeats = 4
+                TotalSeats = 4,
+                AvailableSeats = 4,
             },
             new Event()
             {
@@ -22,7 +23,8 @@ namespace Project.Models
                 Description="описание2",
                 StartAt = DateTime.Now,
                 EndAt = DateTime.Now.AddDays(3),
-                TotalSeats = 5
+                TotalSeats = 5,
+                AvailableSeats = 5
             },
             new Event()
             {
@@ -31,7 +33,8 @@ namespace Project.Models
                 Description="описание3",
                 StartAt = DateTime.Now,
                 EndAt = DateTime.Now.AddDays(3),
-                TotalSeats = 6
+                TotalSeats = 6,
+                AvailableSeats = 6
             }
         };
         /// <summary>

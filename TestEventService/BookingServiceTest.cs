@@ -1,10 +1,7 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Project.Controllers;
 using Project.Models;
-using System;
 
 namespace TestEventService
 {
@@ -16,10 +13,109 @@ namespace TestEventService
         public BookingServiceTest()
         {
             _mockRepository = new Mock<IBookingRepository>();
-            _bookingService = new BookingService(_mockRepository.Object);
             _eventService = new EventService();
+            _bookingService = new BookingService(_mockRepository.Object, _eventService);
         }
+        public async Task CreateBookings_AfterCapacityExceeded_ThrowsNoAvailableSeatsException()
+        {
+            // Arrange
+            var lastEvent = _eventService.GetLastEvent();
 
+            // Создаём брони в пределах лимита
+            var bookingsWithinCapacity = Enumerable.Range(1, 3)
+                .Select(_ => new Booking
+                {
+                    Id = Guid.NewGuid(),
+                    EventId = lastEvent.Id,
+                    Status = BookingStatus.Pending,
+                    CreatedAt = DateTime.Now.AddHours(-1),
+                })
+                .ToList();
+
+            // Мокаем добавление брони — сначала возвращаем объект, потом выбрасываем исключение
+            int bookingCount = 0;
+            _mockRepository.Setup(m => m.AddAsync(It.IsAny<Guid>()))
+                .Callback<Booking>(_ => bookingCount++) // Считаем вызовы метода
+                .ReturnsAsync((Booking booking) =>
+                {
+                    // Если лимит превышен — выбрасываем исключение
+                    if (bookingCount > 3)
+                        throw new NoAvailableSeatsException();
+                    return booking; // Иначе возвращаем бронь
+                });
+
+            // Act & Assert — успешно создаём брони до лимита
+            foreach (var booking in bookingsWithinCapacity)
+            {
+                await _bookingService.CreateBookingAsync(lastEvent.Id); // Создаём брони
+            }
+            var r = _bookingService.CreateBookingAsync(lastEvent.Id);
+            // Проверяем, что лимит достигнут
+            await Assert.ThrowsAsync<NoAvailableSeatsException>(async () => await r);
+                
+        }
+        [Fact]
+        public async Task CreateSeveralBookings_AllHaveUniqueId()
+        {
+            //arrange
+            Event lastEvent = _eventService.GetLastEvent();
+            var bookings = new List<Booking>()
+            {
+                new Booking()
+                {
+                    Id = Guid.NewGuid(),
+                    EventId = lastEvent.Id,
+                    Status = BookingStatus.Pending,
+                    CreatedAt = DateTime.Now.AddHours(-1),
+                },
+                new Booking()
+                {
+                    Id = Guid.NewGuid(),
+                    EventId = lastEvent.Id,
+                    Status = BookingStatus.Pending,
+                    CreatedAt = DateTime.Now.AddHours(-1),
+                },
+                new Booking()
+                {
+                    Id = Guid.NewGuid(),
+                    EventId = lastEvent.Id,
+                    Status = BookingStatus.Pending,
+                    CreatedAt = DateTime.Now.AddHours(-1),
+                },
+            };
+            _mockRepository.Setup(m => m.AddAsync(It.IsAny<Guid>()));
+
+            //act
+            foreach (var booking in bookings)
+            {
+                await _bookingService.CreateBookingAsync(lastEvent.Id);
+            }
+
+            //assert
+            _mockRepository.Verify(r => r.AddAsync(lastEvent.Id), Times.Exactly(3));
+            var result = await _bookingService.GetAllBookingsAsync();
+            Assert.Equal(3, result.Where(b => b.EventId == lastEvent.Id).Count());
+        }
+        [Fact]
+        public async Task CreateBookingReducesAvailableSeats()
+        {
+            //arrange
+            Event lastEvent = _eventService.GetLastEvent();
+            int? availableSeats = lastEvent.AvailableSeats;
+            var booking = new Booking()
+            {
+                Id = Guid.NewGuid(),
+                EventId = lastEvent.Id,
+                Status = BookingStatus.Pending,
+                CreatedAt = DateTime.Now.AddHours(-1),
+            };
+            _mockRepository.Setup(m => m.AddAsync(lastEvent.Id)).ReturnsAsync(booking);
+
+            //act
+            var result = await _bookingService.CreateBookingAsync(lastEvent.Id);
+            //assert
+            Assert.Equal(lastEvent.AvailableSeats + 1, availableSeats);
+        }
         [Fact]
         public async Task CreateBooking_ShouldReturnBookingInfo()
         {
@@ -85,7 +181,7 @@ namespace TestEventService
             //assert
             Assert.True(b1.Id != b2.Id);
         }
-        
+
         [Fact]
         public async Task GetBookingStatusAfterConfirm_ReturnConfirmedStatus()
         {

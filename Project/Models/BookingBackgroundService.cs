@@ -1,16 +1,23 @@
-﻿namespace Project.Models
+﻿using System.Threading.Tasks;
+
+namespace Project.Models
 {
     public class BookingBackgroundService : BackgroundService
     {
         private readonly IBookingRepository _bookingRepository;
-        private readonly IBookingTaskQueue _taskQueue;
+        //private readonly IBookingTaskQueue _taskQueue;
         private readonly ILogger<BookingBackgroundService> _logger;
+        private readonly IEventService _eventService;
+        private readonly SemaphoreSlim _processingSemaphore = new(1, 1);
 
-        public BookingBackgroundService(IBookingTaskQueue taskQueue, 
+        public BookingBackgroundService( 
             ILogger<BookingBackgroundService> logger, 
-            IBookingRepository bookingRepository)
+            IBookingRepository bookingRepository,
+            IEventService eventService
+            //IBookingTaskQueue taskQueue,
+            )
         {
-            _taskQueue = taskQueue;
+            //_taskQueue = taskQueue;
             _logger = logger;
             _bookingRepository = bookingRepository;
         }
@@ -57,15 +64,49 @@
         private async Task FindPendingBookings(CancellationToken cancellationToken)
         {
             var pendingBookings = await _bookingRepository.GetAllPendingAsync();
-            foreach (var pendingBooking in pendingBookings)
+            //foreach (var pendingBooking in pendingBookings)
+            //{
+            //    _logger.LogInformation($"Начата обработка брони {pendingBooking.Id}");
+            //    await Task.Delay(2000, cancellationToken);
+            //    pendingBooking.Status = BookingStatus.Confirmed;
+            //    pendingBooking.ProcessedAt = DateTime.Now;
+
+            //    _logger.LogInformation($"Бронь {pendingBooking.Id} обработана");
+            //}
+            var tasks = pendingBookings.Select(booking => ProcessBookingAsync(booking, cancellationToken));
+            await Task.WhenAll(tasks);
+        }
+
+        private async Task<Booking> ProcessBookingAsync(Booking pendingBooking, CancellationToken cancellationToken)
+        {
+            await Task.Delay(1000, cancellationToken);
+            await _processingSemaphore.WaitAsync();
+            try
             {
                 _logger.LogInformation($"Начата обработка брони {pendingBooking.Id}");
                 await Task.Delay(2000, cancellationToken);
-                pendingBooking.Status = BookingStatus.Confirmed;
-                pendingBooking.ProcessedAt = DateTime.Now;
+                if (_eventService.GetEventById(pendingBooking.EventId) == null)
+                {
+                    pendingBooking.Status = BookingStatus.Rejected;
+                    _logger.LogWarning($"Событие {pendingBooking.EventId} отсутствует в хранилище");
+                }
+                else
+                {
+                    pendingBooking.Status = BookingStatus.Confirmed;
+                    pendingBooking.ProcessedAt = DateTime.Now;
 
-                _logger.LogInformation($"Бронь {pendingBooking.Id} обработана");
+                    _logger.LogInformation($"Бронь {pendingBooking.Id} обработана");
+                }
             }
+            catch
+            {
+                pendingBooking.Status = BookingStatus.Rejected;
+            }
+            finally
+            {
+                _processingSemaphore.Release();
+            }
+            return pendingBooking;
         }
     }
 }

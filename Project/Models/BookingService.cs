@@ -18,7 +18,7 @@ namespace Project.Models
         /// <param name="eventId"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public async Task<Booking?> CreateBookingAsync(Guid eventId)
+        public async Task<Booking> CreateBookingAsync(Guid eventId)
         {
             lock(_bookingLock)
             {
@@ -40,6 +40,14 @@ namespace Project.Models
         public async Task<Booking?> GetBookingByIdAsync(Guid bookingId)
         {
             return await _repository.FindByIdAsync(bookingId);
+        }
+        /// <summary>
+        /// Получить все брони
+        /// </summary>
+        /// <returns></returns>
+        public async Task<List<Booking>> GetAllBookingsAsync()
+        {
+            return await _repository.GetAllAsync();
         }
         /// <summary>
         /// Подтверждение брони
