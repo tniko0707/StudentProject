@@ -14,7 +14,14 @@ builder.Services.AddSwaggerGen(options =>
 });
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+builder.Services.AddHostedService<BookingBackgroundService>();
+
+builder.Services.AddSingleton<IBookingRepository, BookingRepository>();
 builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddScoped<IBookingService, BookingService>();
+
+
 builder.Services.AddRouting(options =>
 {
     options.LowercaseUrls = true;
@@ -36,6 +43,12 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapControllerRoute(
+    name: "GetBooking",
+    pattern: "bookings/{bookingId}",
+    defaults: new { controller = "Bookings", action = "Get" }
+);
 
 
 app.Run();
