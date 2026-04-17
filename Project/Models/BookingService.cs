@@ -5,9 +5,12 @@ namespace Project.Models
     public class BookingService : IBookingService
     {
         private readonly IBookingRepository _repository;
-        public BookingService(IBookingRepository repository)
+        private readonly IEventService _eventService;
+        private readonly object _bookingLock = new();
+        public BookingService(IBookingRepository repository, IEventService eventService)
         {
             _repository = repository;
+            _eventService = eventService;
         }
         /// <summary>
         /// Создание брони
@@ -17,6 +20,15 @@ namespace Project.Models
         /// <exception cref="NotImplementedException"></exception>
         public async Task<Booking?> CreateBookingAsync(Guid eventId)
         {
+            lock(_bookingLock)
+            {
+                Event eventForBooking = _eventService.GetEventById(eventId);
+                bool check = eventForBooking.TryReserveSeats();
+                if (!check)
+                {
+                    throw new NoAvailableSeatsException();
+                }
+            }
             Booking booking = await _repository.AddAsync(eventId);
             return booking;
         }

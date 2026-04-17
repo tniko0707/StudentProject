@@ -12,8 +12,6 @@ namespace Project.Controllers
     [Route("/[controller]")]
     public class BookingsController(IBookingService bookingService): Controller
     {
-
-
         /// <summary>
         /// Получение брони по id
         /// </summary>
