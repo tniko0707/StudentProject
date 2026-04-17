@@ -1,12 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Project.Models
 {
     public class EventService : IEventService
     {
-
         private static readonly List<Event> events = new List<Event>()
         {
             new Event()
@@ -15,7 +12,8 @@ namespace Project.Models
                 Title="имя",
                 Description="описание",
                 StartAt = DateTime.Now,
-                EndAt = DateTime.Now.AddDays(1)
+                EndAt = DateTime.Now.AddDays(1),
+                TotalSeats = 4
             },
             new Event()
             {
@@ -23,7 +21,8 @@ namespace Project.Models
                 Title="имя2",
                 Description="описание2",
                 StartAt = DateTime.Now,
-                EndAt = DateTime.Now.AddDays(3)
+                EndAt = DateTime.Now.AddDays(3),
+                TotalSeats = 5
             },
             new Event()
             {
@@ -31,7 +30,8 @@ namespace Project.Models
                 Title="имя3",
                 Description="описание3",
                 StartAt = DateTime.Now,
-                EndAt = DateTime.Now.AddDays(3)
+                EndAt = DateTime.Now.AddDays(3),
+                TotalSeats = 6
             }
         };
         /// <summary>
@@ -45,6 +45,7 @@ namespace Project.Models
             {
                 throw new ValidationException();
             }
+            if (createEventDto.TotalSeats <= 0) throw new ValidationException();
             Event evente = new Event()
             {
                 Id = Guid.NewGuid(),
@@ -52,6 +53,7 @@ namespace Project.Models
                 Description = createEventDto.Description,
                 StartAt = createEventDto.StartAt,
                 EndAt = createEventDto.EndAt,
+                TotalSeats = createEventDto.TotalSeats,
             };
             events.Add(evente);
         }
@@ -116,7 +118,7 @@ namespace Project.Models
         {
             return events.Last();
         }
-        
+
         /// <summary>
         /// Получает отфильтрованный список событий
         /// </summary>
@@ -129,7 +131,7 @@ namespace Project.Models
             DateTime? from = null,
             DateTime? to = null,
             int page = 1,
-            int pageSize 
+            int pageSize
             = 10)
         {
             var events = this.GetAllEvents();
