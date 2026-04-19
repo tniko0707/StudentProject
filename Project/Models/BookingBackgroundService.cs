@@ -58,7 +58,6 @@ namespace Project.Models
                 }
                 await Task.Delay(10000, stoppingToken);
             }
-
             _logger.LogInformation("BookingBackgroundService остановлен");
         }
 
