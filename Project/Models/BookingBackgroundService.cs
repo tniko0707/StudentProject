@@ -20,6 +20,7 @@ namespace Project.Models
             //_taskQueue = taskQueue;
             _logger = logger;
             _bookingRepository = bookingRepository;
+            _eventService = eventService;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
