@@ -1,37 +1,35 @@
 ﻿
 using Microsoft.AspNetCore.Http.HttpResults;
+using Project.Models;
 
-namespace Project.Models
+namespace Project.Repositories
 {
     public class BookingRepository : IBookingRepository
     {
         public readonly List<Booking> _bookings =
         [
-            new Booking()
-            {
-                Id = Guid.NewGuid(),
-                EventId = Guid.NewGuid(),
-                Status = BookingStatus.Pending,
-                CreatedAt = DateTime.Now.AddHours(-1),
-            },
-            new Booking()
-            {
-                Id = Guid.NewGuid(),
-                EventId = Guid.NewGuid(),
-                Status = BookingStatus.Pending,
-                CreatedAt = DateTime.Now.AddHours(-2),
-            }
+            new Booking
+            (
+                Guid.NewGuid(),
+                BookingStatus.Pending,
+                DateTime.Now.AddHours(-1)
+            ),
+            new Booking
+            (
+                Guid.NewGuid(),
+                BookingStatus.Pending,
+                DateTime.Now.AddHours(-2)
+            )
         ];
 
         public async Task<Booking> AddAsync(Guid eventId)
         {
-            Booking newBooking = new ()
-            {
-                Id = Guid.NewGuid(),
-                EventId = eventId,
-                Status = BookingStatus.Pending,
-                CreatedAt = DateTime.Now,
-            };
+            Booking newBooking = new
+            (
+                eventId,
+                BookingStatus.Pending,
+                DateTime.Now
+            );
             _bookings.Add(newBooking);
             return newBooking;
         }

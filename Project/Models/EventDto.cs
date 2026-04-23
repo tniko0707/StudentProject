@@ -12,6 +12,8 @@ namespace Project.Models
         public DateTime? StartAt { get; set; } = null;
         [Required(ErrorMessage = "Дата окончания обязательна для заполнения")]
         public DateTime? EndAt { get; set; } = null;
+        [Required]
+        public int TotalSeats { get; set; }
     }
 
     [DateValidation(ErrorMessage = "Дата окончания события неверная")]
@@ -24,6 +26,10 @@ namespace Project.Models
         public DateTime? StartAt { get; set; } = null;
         [Required(ErrorMessage = "Дата окончания обязательна для заполнения")]
         public DateTime? EndAt { get; set; } = null;
+        [Required]
+        public int TotalSeats { get; set; }
+        [Required]
+        public int AvailableSeats { get; set; }
     }
 
 }

@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Project.Models;
+using Project.Services;
 using System.Threading.Tasks;
 
 namespace Project.Controllers
@@ -12,8 +12,6 @@ namespace Project.Controllers
     [Route("/[controller]")]
     public class BookingsController(IBookingService bookingService): Controller
     {
-
-
         /// <summary>
         /// Получение брони по id
         /// </summary>

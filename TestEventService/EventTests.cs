@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using Project.Models;
+using Project.Services;
 using System.ComponentModel.DataAnnotations;
 
 namespace TestEventService
@@ -26,14 +27,16 @@ namespace TestEventService
                 Title = "тест",
                 Description = "описание",
                 StartAt = DateTime.Now,
-                EndAt = DateTime.Now.AddDays(1)
+                EndAt = DateTime.Now.AddDays(1),
+                TotalSeats = 5
             };
             
             //act
             _eventService.CreateEvent(createdEventDTO);
 
+            Event newEvent = _eventService.GetLastEvent();
             //assert
-            Assert.True(_eventService.GetAllEvents().Any(e => e.Title == "тест"));
+            Assert.Contains(newEvent, _eventService.GetAllEvents());
             //Assert.Contains(_eventService.GetAllEvents(), createdEventDTO);
         }
 
