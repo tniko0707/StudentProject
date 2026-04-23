@@ -1,6 +1,7 @@
-﻿
+﻿using Project.Models;
+using Project.Repositories;
 using System;
-namespace Project.Models
+namespace Project.Services
 {
     public class BookingService : IBookingService
     {
@@ -58,6 +59,15 @@ namespace Project.Models
         {
             var b = await _repository.FindByIdAsync(bookingId);
             if (b != null) b.Status = BookingStatus.Confirmed;
+        }
+        /// <summary>
+        /// Получение крайней брони
+        /// </summary>
+        /// <returns></returns>
+        public async Task<Booking> GetLastBooking()
+        {
+            var bookings = await _repository.GetAllAsync();
+            return bookings.Last();
         }
     }
 }

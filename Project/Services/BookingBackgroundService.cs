@@ -1,6 +1,8 @@
-﻿using System.Threading.Tasks;
+﻿using Project.Models;
+using Project.Repositories;
+using System.Threading.Tasks;
 
-namespace Project.Models
+namespace Project.Services
 {
     public class BookingBackgroundService : BackgroundService
     {

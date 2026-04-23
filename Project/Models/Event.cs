@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Project.Models
 {
@@ -7,7 +8,19 @@ namespace Project.Models
     /// </summary>
     public class Event
     {
-        public Guid Id { get; set; }
+        [SetsRequiredMembers]
+        public Event(string title, string? description, DateTime? startAt, DateTime? endAt, int totalSeats)
+        {
+            Id = Guid.NewGuid();
+            Title = title;
+            Description = description;
+            StartAt = startAt;
+            EndAt = endAt;
+            TotalSeats = totalSeats;
+            AvailableSeats = TotalSeats;
+        }
+        [Required]
+        public Guid Id { get;}
         [Required]
         public required string Title { get; set; }
         public string? Description { get; set; }
@@ -16,9 +29,9 @@ namespace Project.Models
         [Required]
         public required DateTime? EndAt { get; set; }
         [Required]
-        public int? TotalSeats { get; set; }
+        public int TotalSeats { get; set; }
         [Required]
-        public int? AvailableSeats {  get; set; }
+        public int AvailableSeats {  get; set; }
 
         /// <summary>
         /// Бронь места
