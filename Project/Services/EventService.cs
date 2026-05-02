@@ -1,38 +1,33 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
+﻿using Project.Models;
 using System.ComponentModel.DataAnnotations;
 
-namespace Project.Models
+namespace Project.Services
 {
     public class EventService : IEventService
     {
-
         private static readonly List<Event> events = new List<Event>()
         {
-            new Event()
-            {
-                Id = Guid.NewGuid(),
-                Title="имя",
-                Description="описание",
-                StartAt = DateTime.Now,
-                EndAt = DateTime.Now.AddDays(1)
-            },
-            new Event()
-            {
-                Id = Guid.NewGuid(),
-                Title="имя2",
-                Description="описание2",
-                StartAt = DateTime.Now,
-                EndAt = DateTime.Now.AddDays(3)
-            },
-            new Event()
-            {
-                Id = Guid.NewGuid(),
-                Title="имя3",
-                Description="описание3",
-                StartAt = DateTime.Now,
-                EndAt = DateTime.Now.AddDays(3)
-            }
+            new Event(
+                "имя",
+                "описание",
+                DateTime.Now,
+                DateTime.Now.AddDays(1),
+                4
+            ),
+            new Event(
+                "имя2",
+                "описание2",
+                DateTime.Now,
+                DateTime.Now.AddDays(3),
+                5
+            ),
+            new Event(
+                "имя3",
+                "описание3",
+                DateTime.Now,
+                DateTime.Now.AddDays(3),
+                6
+            )
         };
         /// <summary>
         /// Создать событие
@@ -45,14 +40,15 @@ namespace Project.Models
             {
                 throw new ValidationException();
             }
-            Event evente = new Event()
-            {
-                Id = Guid.NewGuid(),
-                Title = createEventDto.Title,
-                Description = createEventDto.Description,
-                StartAt = createEventDto.StartAt,
-                EndAt = createEventDto.EndAt,
-            };
+            if (createEventDto.TotalSeats <= 0) throw new ValidationException();
+            Event evente = new Event
+            (
+                createEventDto.Title,
+                createEventDto.Description,
+                createEventDto.StartAt,
+                createEventDto.EndAt,
+                createEventDto.TotalSeats
+            );
             events.Add(evente);
         }
         /// <summary>
@@ -98,14 +94,14 @@ namespace Project.Models
             if (eventToUpdate != null)
             {
                 int index = events.IndexOf(eventToUpdate);
-                events[index] = new Event()
-                {
-                    Id = id,
-                    Title = updateEventDto.Title,
-                    Description = updateEventDto.Description,
-                    StartAt = updateEventDto.StartAt,
-                    EndAt = updateEventDto.EndAt,
-                }; ;
+                events[index] = new Event
+                (
+                    updateEventDto.Title,
+                    updateEventDto.Description,
+                    updateEventDto.StartAt,
+                    updateEventDto.EndAt,
+                    updateEventDto.TotalSeats
+                );
             }
         }
         /// <summary>
@@ -116,7 +112,7 @@ namespace Project.Models
         {
             return events.Last();
         }
-        
+
         /// <summary>
         /// Получает отфильтрованный список событий
         /// </summary>
@@ -129,10 +125,10 @@ namespace Project.Models
             DateTime? from = null,
             DateTime? to = null,
             int page = 1,
-            int pageSize 
+            int pageSize
             = 10)
         {
-            var events = this.GetAllEvents();
+            var events = GetAllEvents();
 
             if (title != null)
             {

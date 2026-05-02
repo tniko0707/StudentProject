@@ -79,6 +79,7 @@ namespace Project.Models
                 ValidationException ve => StatusCodes.Status400BadRequest,
                 ArgumentNullException knfe => StatusCodes.Status404NotFound,
                 InvalidOperationException ioe => StatusCodes.Status404NotFound,
+                NoAvailableSeatsException ne => StatusCodes.Status409Conflict,
                 _ => StatusCodes.Status500InternalServerError
             };
     }

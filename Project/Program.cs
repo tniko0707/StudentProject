@@ -1,4 +1,6 @@
 using Project.Models;
+using Project.Repositories;
+using Project.Services;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,7 +20,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddHostedService<BookingBackgroundService>();
 
 builder.Services.AddSingleton<IBookingRepository, BookingRepository>();
-builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddSingleton<IEventService, EventService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
 
 
