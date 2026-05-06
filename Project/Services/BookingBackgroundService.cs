@@ -1,4 +1,6 @@
-﻿using Project.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using Project.DataAccess;
+using Project.Models;
 using Project.Repositories;
 using System.Threading.Tasks;
 
@@ -6,23 +8,22 @@ namespace Project.Services
 {
     public class BookingBackgroundService : BackgroundService
     {
-        private readonly IBookingRepository _bookingRepository;
+        //private readonly IBookingRepository _bookingRepository;
         //private readonly IBookingTaskQueue _taskQueue;
+        private readonly CancellationToken cancellationToken;
+        private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<BookingBackgroundService> _logger;
-        private readonly IEventService _eventService;
-        private readonly SemaphoreSlim _processingSemaphore = new(1, 1);
 
         public BookingBackgroundService( 
             ILogger<BookingBackgroundService> logger, 
-            IBookingRepository bookingRepository,
-            IEventService eventService
+            IServiceScopeFactory serviceScopeFactory
             //IBookingTaskQueue taskQueue,
             )
         {
             //_taskQueue = taskQueue;
             _logger = logger;
-            _bookingRepository = bookingRepository;
-            _eventService = eventService;
+            _scopeFactory = serviceScopeFactory;
+            cancellationToken = new CancellationTokenSource().Token;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -33,27 +34,16 @@ namespace Project.Services
             {
                 try
                 {
-                    #region Обработка через опрос
-                    await FindPendingBookings(stoppingToken);
-                    #endregion
-                    #region Обработка через очередь
-                    //if (_taskQueue.TryDequeue(out BookingTask bookingTask))
-                    //{
-                    //    _logger.LogInformation($"Начата обработка брони {bookingTask.Id}");
+                    using (var scope = _scopeFactory.CreateScope())
+                    {
+                        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-                    //    await Task.Delay(2000, stoppingToken);
+                        await FindPendingBookingsAsync(context, stoppingToken);
 
-                    //    var booking = await _bookingRepository.FindByIdAsync(bookingTask.Id);
-                    //    if (booking != null) 
-                    //    { 
-                    //        booking.Status = BookingStatus.Confirmed;
-                    //        booking.ProcessedAt = DateTime.Now;
-                    //    }
-
-                    //    _logger.LogInformation($"Бронь {bookingTask.Id} обработана");
-                    //}
-                    #endregion
+                        await context.SaveChangesAsync(stoppingToken);
+                    }
                 }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
                 catch (Exception ex)
                 {
                     _logger.LogError($"Ошибка обработки брони");
@@ -63,42 +53,49 @@ namespace Project.Services
             _logger.LogInformation("BookingBackgroundService остановлен");
         }
 
-        private async Task FindPendingBookings(CancellationToken cancellationToken)
+        private async Task FindPendingBookingsAsync(AppDbContext dbContext, 
+            CancellationToken cancellationToken)
         {
-            var pendingBookings = await _bookingRepository.GetAllPendingAsync();
-            //foreach (var pendingBooking in pendingBookings)
-            //{
-            //    _logger.LogInformation($"Начата обработка брони {pendingBooking.Id}");
-            //    await Task.Delay(2000, cancellationToken);
-            //    pendingBooking.Status = BookingStatus.Confirmed;
-            //    pendingBooking.ProcessedAt = DateTime.Now;
-
-            //    _logger.LogInformation($"Бронь {pendingBooking.Id} обработана");
-            //}
-            var tasks = pendingBookings.Select(booking => ProcessBookingAsync(booking, cancellationToken));
-            await Task.WhenAll(tasks);
+            var pendingBookings = await dbContext.Bookings.Where(b => b.Status == BookingStatus.Pending)
+                .ToListAsync();
+            if (pendingBookings.Any() )
+            {
+                var tasks = pendingBookings
+                    .Select(booking => ProcessBookingAsync(booking, cancellationToken));
+                await Task.WhenAll(tasks);
+            }
         }
 
-        private async Task<Booking> ProcessBookingAsync(Booking pendingBooking, CancellationToken cancellationToken)
+        private async Task ProcessBookingAsync(Booking pendingBooking, CancellationToken cancellationToken)
         {
             await Task.Delay(1000, cancellationToken);
-            await _processingSemaphore.WaitAsync();
             try
             {
                 _logger.LogInformation($"Начата обработка брони {pendingBooking.Id}");
                 await Task.Delay(2000, cancellationToken);
-                if (_eventService.GetEventById(pendingBooking.EventId) == null)
-                {
-                    pendingBooking.Status = BookingStatus.Rejected;
-                    _logger.LogWarning($"Событие {pendingBooking.EventId} отсутствует в хранилище");
-                }
-                else
-                {
-                    pendingBooking.Status = BookingStatus.Confirmed;
-                    pendingBooking.ProcessedAt = DateTime.Now;
 
-                    _logger.LogInformation($"Бронь {pendingBooking.Id} обработана");
+                using (var scope = _scopeFactory.CreateScope())
+                {
+                    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                    var eventForBook = await context.Events.FirstOrDefaultAsync(e => e.Id == pendingBooking.EventId,
+                        cancellationToken);
+                    if (eventForBook == null)
+                    {
+                        pendingBooking.Status = BookingStatus.Rejected;
+                        _logger.LogWarning($"Событие {pendingBooking.EventId} отсутствует в хранилище");
+                    }
+                    else
+                    {
+                        pendingBooking.Status = BookingStatus.Confirmed;
+                        pendingBooking.ProcessedAt = DateTime.UtcNow;
+
+
+                        _logger.LogInformation($"Бронь {pendingBooking.Id} обработана");
+                    }
                 }
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
             }
             catch
             {
@@ -106,9 +103,7 @@ namespace Project.Services
             }
             finally
             {
-                _processingSemaphore.Release();
             }
-            return pendingBooking;
         }
     }
 }

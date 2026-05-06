@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Project.Models
 {
@@ -7,6 +8,10 @@ namespace Project.Models
     /// </summary>
     public class Booking
     {
+        private Booking()
+        {
+
+        }
         public Booking(Guid eventId, BookingStatus status, DateTime createdAt)
         {
             Id = Guid.NewGuid();
@@ -24,5 +29,14 @@ namespace Project.Models
         [Required]
         public DateTime CreatedAt { get;}
         public DateTime? ProcessedAt { get; set; }
+        [JsonIgnore]
+        public Event? Event { get; set; }
+
+        internal static Booking CreatePending(Guid eventId)
+        {
+            if (eventId == Guid.Empty) throw new ValidationException(nameof(eventId));
+            return new Booking(eventId, BookingStatus.Pending, DateTime.UtcNow);
+
+        }
     }
 }
