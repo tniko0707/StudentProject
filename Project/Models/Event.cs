@@ -8,8 +8,13 @@ namespace Project.Models
     /// </summary>
     public class Event
     {
+        private Event()
+        {
+            Title = null!;
+        }
         [SetsRequiredMembers]
-        public Event(string title, string? description, DateTime? startAt, DateTime? endAt, int totalSeats)
+        public Event(string title, string? description, DateTime? startAt, 
+            DateTime? endAt, int totalSeats)
         {
             Id = Guid.NewGuid();
             Title = title;
@@ -33,6 +38,8 @@ namespace Project.Models
         [Required]
         public int AvailableSeats {  get; set; }
 
+        public List<Booking> Bookings { get; set; }
+
         /// <summary>
         /// Бронь места
         /// </summary>
@@ -51,6 +58,15 @@ namespace Project.Models
         public void ReleaseSeats(int count = 1)
         {
             AvailableSeats += count;
+        }
+
+        internal void Update(UpdateEventDto updateEventDto)
+        {
+            Title = updateEventDto.Title;
+            Description = updateEventDto.Description;
+            StartAt = updateEventDto.StartAt;
+            EndAt = updateEventDto.EndAt;
+            TotalSeats = updateEventDto.TotalSeats;
         }
     }
 }

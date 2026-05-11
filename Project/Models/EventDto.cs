@@ -13,6 +13,8 @@ namespace Project.Models
         [Required(ErrorMessage = "Дата окончания обязательна для заполнения")]
         public DateTime? EndAt { get; set; } = null;
         [Required]
+        [Range(1, int.MaxValue, ErrorMessage = "Число мест должно быть > 0")]
+
         public int TotalSeats { get; set; }
     }
 
@@ -27,6 +29,7 @@ namespace Project.Models
         [Required(ErrorMessage = "Дата окончания обязательна для заполнения")]
         public DateTime? EndAt { get; set; } = null;
         [Required]
+        [Range(1, int.MaxValue, ErrorMessage ="Число мест должно быть > 0")]
         public int TotalSeats { get; set; }
         [Required]
         public int AvailableSeats { get; set; }

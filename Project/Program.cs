@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using Project.DataAccess;
 using Project.Models;
 using Project.Repositories;
 using Project.Services;
@@ -17,12 +19,16 @@ builder.Services.AddSwaggerGen(options =>
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-builder.Services.AddHostedService<BookingBackgroundService>();
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string 'Default' not found.");
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(connectionString));
 
-builder.Services.AddSingleton<IBookingRepository, BookingRepository>();
-builder.Services.AddSingleton<IEventService, EventService>();
+//builder.Services.AddScoped<IBookingRepository, BookingRepository>();
+builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
 
+builder.Services.AddHostedService<BookingBackgroundService>();
 
 builder.Services.AddRouting(options =>
 {
@@ -31,6 +37,12 @@ builder.Services.AddRouting(options =>
 
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.EnsureCreated();
+}
 
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 // Configure the HTTP request pipeline.

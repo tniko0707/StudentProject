@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Project.Models;
 using Project.Services;
+using System.Threading.Tasks;
 
 namespace Project.Controllers
 {
@@ -10,11 +11,13 @@ namespace Project.Controllers
     {
         private readonly IEventService _eventService;
         private readonly IBookingService _bookingService;
+        private CancellationToken cancellationToken;
 
         public EventsController(IEventService eventService, IBookingService bookingService)
         {
             _eventService = eventService;
             _bookingService = bookingService;
+            cancellationToken = new CancellationTokenSource().Token;
         }
 
         /// <summary>
@@ -27,14 +30,14 @@ namespace Project.Controllers
         /// <param name="pageSize">10</param>
         /// <returns></returns>
         [HttpGet]
-        public IActionResult Get(
+        public async Task<IActionResult> Get(
             [FromQuery] string title = null,
             [FromQuery] DateTime? from = null,
             [FromQuery] DateTime? to = null,
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 10)
         {
-            var events = _eventService.GetFilteredEvents(title, from, to, page, pageSize);
+            var events = await _eventService.GetFilteredEventsAsync(title, from, to, page, pageSize);
 
             return Ok(events);
         }
@@ -44,9 +47,9 @@ namespace Project.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("{id}")]
-        public IActionResult Get(Guid id)
+        public async Task<IActionResult> Get(Guid id)
         {
-            var evente = _eventService.GetEventById(id);
+            var evente = await _eventService.GetEventByIdAsync(id, cancellationToken);
             if (evente == null) return NotFound();
             return Ok(evente);
         }
@@ -56,7 +59,7 @@ namespace Project.Controllers
         /// <param name="createEventDto"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult Create([FromBody] CreateEventDto createEventDto)
+        public async Task<IActionResult> Create([FromBody] CreateEventDto createEventDto)
         {
             //if (!ModelState.IsValid) return BadRequest();
             if (!ModelState.IsValid)
@@ -67,8 +70,7 @@ namespace Project.Controllers
                 };
                 return BadRequest(problemDetails);
             }
-            _eventService.CreateEvent(createEventDto);
-            Event ev = _eventService.GetLastEvent();
+            var ev = await _eventService.CreateEventAsync(createEventDto, cancellationToken);
             //return new CreatedAtActionResult(nameof(Get), nameof(Get), new {id = ev.Id}, ev);
             return CreatedAtAction(nameof(Create), new {id = ev.Id}, ev);
         }
@@ -79,10 +81,10 @@ namespace Project.Controllers
         /// <param name="evente"></param>
         /// <returns></returns>
         [HttpPut("{id}")]
-        public IActionResult Update(Guid id, [FromBody]UpdateEventDto updateEventDto)
+        public async Task<IActionResult> Update(Guid id, [FromBody]UpdateEventDto updateEventDto)
         {
-            if (_eventService.GetEventById(id) == null) return NotFound();
-            _eventService.UpdateEvent(id, updateEventDto);
+            if (await _eventService.GetEventByIdAsync(id, cancellationToken) == null) return NotFound();
+            await _eventService.UpdateEventAsync(id, updateEventDto, cancellationToken);
             return new NoContentResult();
         }
         /// <summary>
@@ -91,27 +93,14 @@ namespace Project.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpDelete("{id}")]
-        public IActionResult Delete(Guid id)
+        public async Task<IActionResult> Delete(Guid id)
         {
-            if (_eventService.GetEventById(id) == null) return NotFound();
-            _eventService.DeleteEvent(id);
+            if (await _eventService.GetEventByIdAsync(id, cancellationToken) == null) return NotFound();
+            await _eventService.DeleteEventAsync(id, cancellationToken);
             return new OkResult();
         }
 
-        /// <summary>
-        /// Создание брони для события
-        /// </summary>
-        /// <param name = "eventId" > id события</param>
-        /// <returns> Бронь </returns >
-        [HttpPost("{eventId}/book")]
-        public async Task<IActionResult> CreateBookingAsync(Guid eventId)
-        {
-            if (_eventService.GetEventById(eventId) == null) return NotFound();
 
-            var booking = await _bookingService.CreateBookingAsync(eventId);
-
-            return AcceptedAtRoute("GetBooking", new { Id = booking.Id }, booking);
-        }
 
     }
 }

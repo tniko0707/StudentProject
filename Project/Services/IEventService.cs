@@ -4,18 +4,19 @@ namespace Project.Services
 {
     public interface IEventService
     {
-        IEnumerable<Event> GetAllEvents();
-        Event? GetEventById(Guid id);
-        void CreateEvent(CreateEventDto createEventDto);
-        void UpdateEvent(Guid id, UpdateEventDto updateEventDto);
-        void DeleteEvent(Guid id);
-        Event GetLastEvent();
-        PaginatedResult GetFilteredEvents(
+        Task<IEnumerable<Event>> GetAllEventsAsync(CancellationToken cancellationToken);
+        Task<Event?> GetEventByIdAsync(Guid id, CancellationToken cancellationToken);
+        Task<Event> CreateEventAsync(CreateEventDto createEventDto, CancellationToken cancellationToken);
+        Task<Event?> UpdateEventAsync(Guid id, UpdateEventDto updateEventDto, CancellationToken cancellationToken);
+        Task<bool> DeleteEventAsync(Guid id, CancellationToken cancellationToken);
+        Task<Event> GetLastEventAsync(CancellationToken cancellationToken);
+        Task<PaginatedResult> GetFilteredEventsAsync(
             string title = null,
             DateTime? from = null,
             DateTime? to = null,
             int page = 1,
-            int pageSize = 2);
+            int pageSize = 10,
+            CancellationToken cancellationToken = default);
 
     }
 }
