@@ -32,7 +32,7 @@ namespace Project.Models
         [JsonIgnore]
         public Event? Event { get; set; }
 
-        internal static Booking CreatePending(Guid eventId)
+        public static Booking CreatePending(Guid eventId)
         {
             if (eventId == Guid.Empty) throw new ValidationException(nameof(eventId));
             return new Booking(eventId, BookingStatus.Pending, DateTime.UtcNow);

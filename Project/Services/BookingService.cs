@@ -25,12 +25,8 @@ namespace Project.Services
         public async Task<Booking> CreateBookingAsync(Guid eventId, CancellationToken cancellationToken)
         {
             await _semaphore.WaitAsync(cancellationToken);
-            //lock(_bookingLock)
             try
             {
-                //Event eventForBooking = _eventService.GetEventById(eventId);
-                //Event? eventForBooking = await _dbContext.Events.FirstOrDefaultAsync(e => e.Id == eventId, 
-                //    cancellationToken);
                 Event? eventForBooking = await _eventRepository.FindByIdAsync(eventId, cancellationToken);
                 if (eventForBooking == null)
                 {
@@ -43,8 +39,6 @@ namespace Project.Services
                 }
                 Booking booking = Booking.CreatePending(eventId);
                 await _bookingRepository.AddAsync(booking);
-                //await _dbContext.Bookings.AddAsync(booking, cancellationToken);
-                //await _dbContext.SaveChangesAsync(cancellationToken);
                 return booking;
             }
             finally { _semaphore.Release(); }
