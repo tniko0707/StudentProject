@@ -132,6 +132,8 @@ namespace Project.Services
         /// <param name="title">регистронезависимое имя</param>
         /// <param name="from">дата начала</param>
         /// <param name="to">дата конца</param>
+        /// <param name="page">номер страницы для показа</param>
+        /// <param name="pageSize">число элементов на странице</param>
         /// <param name="cancellationToken">токен отмены</param>
         /// <returns></returns>
         public async Task<PaginatedResult> GetFilteredEventsAsync(
@@ -147,7 +149,7 @@ namespace Project.Services
 
             if (!string.IsNullOrWhiteSpace(title))
             {
-                query = query.Where(e => e.Title.Contains(title, StringComparison.InvariantCultureIgnoreCase));
+                query = query.Where(e => EF.Functions.Like(e.Title, $"%{title}%"));
             }
 
             if (from != null)
@@ -160,8 +162,8 @@ namespace Project.Services
                 query = query.Where(e => e.EndAt <= to.Value);
             }
             //Общее число страниц/записей нужно считать по полной отфильтрованной выборке до Skip/Take
-            int totalPages =  (int)Math.Ceiling((double) await query.CountAsync(cancellationToken) / pageSize);
-            int totalEvents = query.Count();
+            int totalEvents = await query.CountAsync(cancellationToken);
+            int totalPages =  (int)Math.Ceiling((double) totalEvents / pageSize);
             query = query.Skip((page - 1) * pageSize).Take(pageSize);
 
             return new PaginatedResult(totalEvents, await query.ToListAsync(cancellationToken), page, pageSize, totalPages);

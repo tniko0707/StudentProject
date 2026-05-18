@@ -9,7 +9,7 @@ namespace Project.Repositories
     {
         private readonly AppDbContext _db;
         public EventRepository(AppDbContext context) { _db = context; }
-        public async Task SaveChangesAsync(CancellationToken ct)
+        public async Task SaveChangesAsync(CancellationToken ct = default)
         {
             await _db.SaveChangesAsync(ct);
         }
@@ -33,9 +33,9 @@ namespace Project.Repositories
             return await _db.Events.ToListAsync(ct);
         }
 
-        public async Task<Event?> GetLast(CancellationToken ct)
+        public async Task<Event?> GetLast(CancellationToken ct = default)
         {
-            return await _db.Events.LastOrDefaultAsync(ct);
+            return await _db.Events.OrderBy(e => e.StartAt).LastOrDefaultAsync(ct);
         }
 
         public IQueryable<Event> GetQuery()

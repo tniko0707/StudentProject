@@ -35,7 +35,7 @@ namespace Project.Repositories
         }
         public async Task<Booking> GetLastBookingAsync(CancellationToken ct = default)
         {
-            return await _db.Bookings.LastAsync();
+            return await _db.Bookings.OrderBy(b => b.CreatedAt).LastAsync();
         }
         public async Task ConfirmBookingAsync(Guid id, CancellationToken ct = default)
         {
@@ -51,9 +51,9 @@ namespace Project.Repositories
         {
             await _db.SaveChangesAsync(ct);
         }
-        public async Task<int> DeleteDataFromTable(CancellationToken cancellationToken)
+        public async Task<int> DeleteDataFromTable(CancellationToken ct = default)
         {
-            return await _db.Bookings.ExecuteDeleteAsync(cancellationToken);
+            return await _db.Bookings.ExecuteDeleteAsync(ct);
         }
     }
 }
