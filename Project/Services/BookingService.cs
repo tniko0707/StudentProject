@@ -2,13 +2,19 @@
 using Microsoft.Extensions.Logging;
 using Project.DataAccess;
 using Project.Models;
+using Project.Repositories;
 namespace Project.Services
 {
     public class BookingService : IBookingService
     {
         private static readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
-        private readonly AppDbContext _dbContext;
-        public BookingService(AppDbContext dbContext) { _dbContext = dbContext; }
+        private readonly IBookingRepository _bookingRepository;
+        private readonly IEventRepository _eventRepository;
+        public BookingService(IBookingRepository bookingRepository, IEventRepository eventRepository) 
+        { 
+            _bookingRepository = bookingRepository; 
+            _eventRepository = eventRepository;
+        }
 
         /// <summary>
         /// Создание брони
@@ -19,12 +25,9 @@ namespace Project.Services
         public async Task<Booking> CreateBookingAsync(Guid eventId, CancellationToken cancellationToken)
         {
             await _semaphore.WaitAsync(cancellationToken);
-            //lock(_bookingLock)
             try
             {
-                //Event eventForBooking = _eventService.GetEventById(eventId);
-                Event? eventForBooking = await _dbContext.Events.FirstOrDefaultAsync(e => e.Id == eventId, 
-                    cancellationToken);
+                Event? eventForBooking = await _eventRepository.FindByIdAsync(eventId, cancellationToken);
                 if (eventForBooking == null)
                 {
                     throw new KeyNotFoundException($"Событие {eventId} не найдено");
@@ -35,8 +38,7 @@ namespace Project.Services
                     throw new NoAvailableSeatsException();
                 }
                 Booking booking = Booking.CreatePending(eventId);
-                await _dbContext.Bookings.AddAsync(booking, cancellationToken);
-                await _dbContext.SaveChangesAsync(cancellationToken);
+                await _bookingRepository.AddAsync(booking);
                 return booking;
             }
             finally { _semaphore.Release(); }
@@ -48,7 +50,8 @@ namespace Project.Services
         /// <returns></returns>
         public async Task<Booking?> GetBookingByIdAsync(Guid bookingId, CancellationToken cancellationToken)
         {
-            var booking = await _dbContext.Bookings.FirstOrDefaultAsync(b => b.Id == bookingId, cancellationToken);
+            //var booking = await _dbContext.Bookings.FirstOrDefaultAsync(b => b.Id == bookingId, cancellationToken);
+            var booking = await _bookingRepository.FindByIdAsync(bookingId, cancellationToken);
             if (booking == null)
             {
                 throw new KeyNotFoundException($"Событие {bookingId} не найдено");
@@ -61,7 +64,7 @@ namespace Project.Services
         /// <returns></returns>
         public async Task<List<Booking>> GetAllBookingsAsync(CancellationToken cancellationToken)
         {
-            return await _dbContext.Bookings.ToListAsync(cancellationToken);
+            return await _bookingRepository.GetAllAsync(cancellationToken);
         }
         /// <summary>
         /// Подтверждение брони
@@ -70,13 +73,7 @@ namespace Project.Services
         /// <returns></returns>
         public async Task ConfirmBookingAsync(Guid bookingId, CancellationToken cancellationToken)
         {
-            var b = await _dbContext.Bookings.FirstOrDefaultAsync(b => b.Id == bookingId);
-            if (b != null)
-            {
-                b.Status = BookingStatus.Confirmed;
-                await _dbContext.SaveChangesAsync(cancellationToken);
-            }
-            ;
+            await _bookingRepository.ConfirmBookingAsync(bookingId, cancellationToken);
         }
         /// <summary>
         /// Получение крайней брони
@@ -84,7 +81,7 @@ namespace Project.Services
         /// <returns></returns>
         public async Task<Booking> GetLastBookingAsync(CancellationToken cancellationToken)
         {
-            return await _dbContext.Bookings.LastAsync(cancellationToken);
+            return await _bookingRepository.GetLastBookingAsync(cancellationToken);
         }
         /// <summary>
         /// Очистка база броней
@@ -93,7 +90,7 @@ namespace Project.Services
         /// <returns></returns>
         public async Task<bool> DeleteAllBookingsAsync(CancellationToken cancellationToken)
         {
-            return await _dbContext.Bookings.ExecuteDeleteAsync(cancellationToken) > 0;
+            return await _bookingRepository.DeleteDataFromTable() > 0;
         }
 
     }

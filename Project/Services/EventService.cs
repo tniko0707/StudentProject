@@ -2,41 +2,18 @@
 using Microsoft.Extensions.Logging;
 using Project.DataAccess;
 using Project.Models;
+using Project.Repositories;
 using System.ComponentModel.DataAnnotations;
 
 namespace Project.Services
 {
     public class EventService : IEventService
     {
-        private readonly AppDbContext _dbContext;
-        public EventService(AppDbContext _context)
+        private readonly IEventRepository _eventRepository;
+        public EventService(IEventRepository eventRepository)
         {
-            _dbContext = _context;
+            _eventRepository = eventRepository;
         }
-        //private static readonly List<Event> events = new List<Event>()
-        //{
-        //    new Event(
-        //        "имя",
-        //        "описание",
-        //        DateTime.Now,
-        //        DateTime.Now.AddDays(1),
-        //        4
-        //    ),
-        //    new Event(
-        //        "имя2",
-        //        "описание2",
-        //        DateTime.Now,
-        //        DateTime.Now.AddDays(3),
-        //        5
-        //    ),
-        //    new Event(
-        //        "имя3",
-        //        "описание3",
-        //        DateTime.Now,
-        //        DateTime.Now.AddDays(3),
-        //        6
-        //    )
-        //};
         /// <summary>
         /// Создать событие
         /// </summary>
@@ -62,8 +39,9 @@ namespace Project.Services
                 createEventDto.EndAt,
                 createEventDto.TotalSeats
             );
-            await _dbContext.Events.AddAsync(evente, cancellationToken);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await _eventRepository.AddAsync(evente);
+            //await _dbContext.Events.AddAsync(evente, cancellationToken);
+            //await _dbContext.SaveChangesAsync(cancellationToken);
             return evente;
         }
         /// <summary>
@@ -72,13 +50,15 @@ namespace Project.Services
         /// <param name="id"></param>
         public async Task<bool> DeleteEventAsync(Guid id, CancellationToken cancellationToken)
         {
-            Event @event = await _dbContext.Events.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+            //Event @event = await _dbContext.Events.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+            Event? @event = await _eventRepository.FindByIdAsync(id, cancellationToken);
             if ( @event == null)
             {
                 return false;
             }
-            _dbContext.Events.Remove(@event);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await _eventRepository.RemoveEvent(@event, cancellationToken);
+            //_dbContext.Events.Remove(@event);
+            //await _dbContext.SaveChangesAsync(cancellationToken);
             return true;
         }
         /// <summary>
@@ -87,7 +67,8 @@ namespace Project.Services
         /// <returns></returns>
         public async Task<IEnumerable<Event>> GetAllEventsAsync(CancellationToken cancellationToken)
         {
-            return await _dbContext.Events.ToListAsync(cancellationToken);
+            return await _eventRepository.GetAll(cancellationToken);
+            //return await _dbContext.Events.ToListAsync(cancellationToken);
         }
         /// <summary>
         /// Получить событие по id
@@ -96,7 +77,8 @@ namespace Project.Services
         /// <returns></returns>
         public async Task<Event> GetEventByIdAsync(Guid id, CancellationToken cancellationToken)
         {
-            var eventForBooking = await _dbContext.Events.FirstOrDefaultAsync(e => e.Id == id, cancellationToken) as Event;
+            Event? eventForBooking = await _eventRepository.FindByIdAsync(id, cancellationToken);
+            //var eventForBooking = await _dbContext.Events.FirstOrDefaultAsync(e => e.Id == id, cancellationToken) as Event;
             if (eventForBooking == null)
             {
                 throw new KeyNotFoundException($"Событие {id} не найдено");
@@ -130,16 +112,18 @@ namespace Project.Services
             {
                 eventToUpdate.Update(updateEventDto);
             }
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            //await _dbContext.SaveChangesAsync(cancellationToken);
+            await _eventRepository.SaveChangesAsync(cancellationToken);
             return eventToUpdate;
         }
         /// <summary>
         /// Получить последнее событие
         /// </summary>
         /// <returns></returns>
-        public async Task<Event> GetLastEventAsync(CancellationToken cancellationToken)
+        public async Task<Event?> GetLastEventAsync(CancellationToken cancellationToken)
         {
-            return await _dbContext.Events.LastAsync(cancellationToken);
+            //return await _dbContext.Events.LastAsync(cancellationToken);
+            return await _eventRepository.GetLast(cancellationToken);
         }
 
         /// <summary>
@@ -148,6 +132,8 @@ namespace Project.Services
         /// <param name="title">регистронезависимое имя</param>
         /// <param name="from">дата начала</param>
         /// <param name="to">дата конца</param>
+        /// <param name="page">номер страницы для показа</param>
+        /// <param name="pageSize">число элементов на странице</param>
         /// <param name="cancellationToken">токен отмены</param>
         /// <returns></returns>
         public async Task<PaginatedResult> GetFilteredEventsAsync(
@@ -158,11 +144,12 @@ namespace Project.Services
             int pageSize = 10,
             CancellationToken cancellationToken = default)
         {
-            var query = _dbContext.Events.AsQueryable();
+            //var query = _dbContext.Events.AsQueryable();
+            var query = _eventRepository.GetQuery();
 
             if (!string.IsNullOrWhiteSpace(title))
             {
-                query = query.Where(e => e.Title.Contains(title, StringComparison.InvariantCultureIgnoreCase));
+                query = query.Where(e => EF.Functions.Like(e.Title, $"%{title}%"));
             }
 
             if (from != null)
@@ -175,8 +162,8 @@ namespace Project.Services
                 query = query.Where(e => e.EndAt <= to.Value);
             }
             //Общее число страниц/записей нужно считать по полной отфильтрованной выборке до Skip/Take
-            int totalPages =  (int)Math.Ceiling((double) await query.CountAsync(cancellationToken) / pageSize);
-            int totalEvents = query.Count();
+            int totalEvents = await query.CountAsync(cancellationToken);
+            int totalPages =  (int)Math.Ceiling((double) totalEvents / pageSize);
             query = query.Skip((page - 1) * pageSize).Take(pageSize);
 
             return new PaginatedResult(totalEvents, await query.ToListAsync(cancellationToken), page, pageSize, totalPages);

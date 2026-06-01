@@ -36,11 +36,13 @@ namespace Project.Services
                 {
                     using (var scope = _scopeFactory.CreateScope())
                     {
-                        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-                        await FindPendingBookingsAsync(context, stoppingToken);
-
-                        await context.SaveChangesAsync(stoppingToken);
+                        var bookingRepository = scope.ServiceProvider.GetRequiredService<IBookingRepository>();
+                        var pendingBookings = await bookingRepository.GetAllPendingAsync(stoppingToken);
+                        if (pendingBookings.Any())
+                        {
+                            await FindPendingBookingsAsync(pendingBookings, stoppingToken);
+                            await bookingRepository.SaveChangesAsync(stoppingToken);
+                        }
                     }
                 }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
@@ -53,17 +55,12 @@ namespace Project.Services
             _logger.LogInformation("BookingBackgroundService остановлен");
         }
 
-        private async Task FindPendingBookingsAsync(AppDbContext dbContext, 
+        private async Task FindPendingBookingsAsync(IEnumerable<Booking> pendingBookings,
             CancellationToken cancellationToken)
         {
-            var pendingBookings = await dbContext.Bookings.Where(b => b.Status == BookingStatus.Pending)
-                .ToListAsync();
-            if (pendingBookings.Any() )
-            {
-                var tasks = pendingBookings
-                    .Select(booking => ProcessBookingAsync(booking, cancellationToken));
-                await Task.WhenAll(tasks);
-            }
+            var tasks = pendingBookings
+                .Select(booking => ProcessBookingAsync(booking, cancellationToken));
+            await Task.WhenAll(tasks);
         }
 
         private async Task ProcessBookingAsync(Booking pendingBooking, CancellationToken cancellationToken)
@@ -76,9 +73,12 @@ namespace Project.Services
 
                 using (var scope = _scopeFactory.CreateScope())
                 {
-                    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                    var eventForBook = await context.Events.FirstOrDefaultAsync(e => e.Id == pendingBooking.EventId,
-                        cancellationToken);
+                    //var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                    //var eventForBook = await context.Events.FirstOrDefaultAsync(e => e.Id == pendingBooking.EventId,
+                    //    cancellationToken);
+                    var eventRepository = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+                    var eventForBook = await eventRepository.FindByIdAsync(pendingBooking.EventId, cancellationToken);
+
                     if (eventForBook == null)
                     {
                         pendingBooking.Status = BookingStatus.Rejected;
@@ -89,7 +89,6 @@ namespace Project.Services
                         pendingBooking.Status = BookingStatus.Confirmed;
                         pendingBooking.ProcessedAt = DateTime.UtcNow;
 
-
                         _logger.LogInformation($"Бронь {pendingBooking.Id} обработана");
                     }
                 }
@@ -99,6 +98,8 @@ namespace Project.Services
             }
             catch
             {
+                _logger.LogInformation($"Бронь {pendingBooking.Id} отклонена из-за ошибки");
+
                 pendingBooking.Status = BookingStatus.Rejected;
             }
             finally

@@ -1,55 +1,59 @@
 ﻿
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.EntityFrameworkCore;
+using Project.DataAccess;
 using Project.Models;
+using System.Threading;
 
 namespace Project.Repositories
 {
     public class BookingRepository : IBookingRepository
     {
-        public readonly List<Booking> _bookings =
-        [
-            new Booking
-            (
-                Guid.NewGuid(),
-                BookingStatus.Pending,
-                DateTime.Now.AddHours(-1)
-            ),
-            new Booking
-            (
-                Guid.NewGuid(),
-                BookingStatus.Pending,
-                DateTime.Now.AddHours(-2)
-            )
-        ];
+        private readonly AppDbContext _db;
 
-        public async Task<Booking> AddAsync(Guid eventId)
+        public BookingRepository(AppDbContext db) { _db = db; }
+
+        public async Task<Booking> AddAsync(Booking booking, CancellationToken ct = default)
         {
-            Booking newBooking = new
-            (
-                eventId,
-                BookingStatus.Pending,
-                DateTime.Now
-            );
-            _bookings.Add(newBooking);
-            return newBooking;
+            _db.Bookings.Add(booking);
+            await SaveChangesAsync(ct);
+            return booking;
         }
 
-        public async Task<Booking?> FindByIdAsync(Guid id)
+        public async Task<Booking?> FindByIdAsync(Guid id, CancellationToken ct = default)
         {
-            return _bookings.FirstOrDefault(b => b.Id == id, null);
+            return await _db.Bookings.FirstOrDefaultAsync(b => b.Id == id);
         }
 
-        public async Task<List<Booking>> GetAllAsync()
+        public async Task<List<Booking>> GetAllAsync(CancellationToken ct = default)
         {
-            return _bookings;
+            return await _db.Bookings.ToListAsync();
         }
-        public async Task<IEnumerable<Booking>> GetAllPendingAsync()
+        public async Task<IEnumerable<Booking>> GetAllPendingAsync(CancellationToken ct = default)
         {
-            return _bookings.Where(b => b.Status == BookingStatus.Pending);
+            return await _db.Bookings.Where(b => b.Status == BookingStatus.Pending).ToListAsync();
         }
-        public async Task<Booking> GetLastBookingAsync()
+        public async Task<Booking> GetLastBookingAsync(CancellationToken ct = default)
         {
-            return _bookings.Last();
+            return await _db.Bookings.OrderBy(b => b.CreatedAt).LastAsync();
+        }
+        public async Task ConfirmBookingAsync(Guid id, CancellationToken ct = default)
+        {
+            var b = await FindByIdAsync(id, ct);
+            if (b != null)
+            {
+                b.Status = BookingStatus.Confirmed;
+                await SaveChangesAsync(ct);
+            }
+            ;
+        }
+        public async Task SaveChangesAsync(CancellationToken ct)
+        {
+            await _db.SaveChangesAsync(ct);
+        }
+        public async Task<int> DeleteDataFromTable(CancellationToken ct = default)
+        {
+            return await _db.Bookings.ExecuteDeleteAsync(ct);
         }
     }
 }

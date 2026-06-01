@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Project.DataAccess;
 using Project.Models;
+using Project.Repositories;
 using Project.Services;
 
 public sealed class BookingServiceTests : IDisposable
@@ -21,6 +22,8 @@ public sealed class BookingServiceTests : IDisposable
         var services = new ServiceCollection();
         services.AddDbContext<AppDbContext>(options =>
             options.UseInMemoryDatabase(dbName));
+        services.AddScoped<IBookingRepository, BookingRepository>();
+        services.AddScoped<IEventRepository, EventRepository>();
         services.AddScoped<IEventService, EventService>();
         services.AddScoped<IBookingService, BookingService>();
 
