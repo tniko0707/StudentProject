@@ -1,10 +1,12 @@
 ﻿namespace TestEventService;
+
+using Application.DTO;
+using Application.Repositories;
+using Application.Services;
+using Infrastructure.DataAccess;
+using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Project.DataAccess;
-using Project.Models;
-using Project.Repositories;
-using Project.Services;
 using System.ComponentModel.DataAnnotations;
 
 public sealed class EventServiceTests : IDisposable
@@ -65,7 +67,7 @@ public sealed class EventServiceTests : IDisposable
     public async Task CreateEventAsync_WithNullTitle_ThrowsValidationException()
     {
         var futureDate = DateTime.UtcNow.AddDays(1);
-        var CreateEventDto = new CreateEventDto
+        var createEventDto = new CreateEventDto
         {
             Title = null,
             StartAt = futureDate,
@@ -73,8 +75,8 @@ public sealed class EventServiceTests : IDisposable
             TotalSeats = 10,
         };
 
-        var exception = await Assert.ThrowsAsync<ValidationException>(() => 
-        _eventService.CreateEventAsync(CreateEventDto, cancellationToken));
+        var exception = await Assert.ThrowsAsync<ValidationException>(() =>
+        _eventService.CreateEventAsync(createEventDto, cancellationToken));
         Assert.IsType(typeof(ValidationException), exception);
     }
 
@@ -90,7 +92,7 @@ public sealed class EventServiceTests : IDisposable
             TotalSeats = 10,
         };
 
-        var exception = await Assert.ThrowsAsync<ValidationException>(() => 
+        var exception = await Assert.ThrowsAsync<ValidationException>(() =>
         _eventService.CreateEventAsync(CreateEventDto, cancellationToken));
         Assert.IsType(typeof(ValidationException), exception);
     }
@@ -107,7 +109,7 @@ public sealed class EventServiceTests : IDisposable
             TotalSeats = 10,
         };
 
-        var exception = await Assert.ThrowsAsync<ValidationException>(() => 
+        var exception = await Assert.ThrowsAsync<ValidationException>(() =>
         _eventService.CreateEventAsync(CreateEventDto, cancellationToken));
         Assert.IsType(typeof(ValidationException), exception);
     }
@@ -124,7 +126,7 @@ public sealed class EventServiceTests : IDisposable
             TotalSeats = 10,
         };
 
-        var exception = await Assert.ThrowsAsync<ValidationException>(() => 
+        var exception = await Assert.ThrowsAsync<ValidationException>(() =>
         _eventService.CreateEventAsync(CreateEventDto, cancellationToken));
         Assert.IsType(typeof(ValidationException), exception);
     }
@@ -141,7 +143,7 @@ public sealed class EventServiceTests : IDisposable
             TotalSeats = 10,
         };
 
-        var exception = await Assert.ThrowsAsync<ValidationException>(() => 
+        var exception = await Assert.ThrowsAsync<ValidationException>(() =>
         _eventService.CreateEventAsync(CreateEventDto, cancellationToken));
         Assert.IsType(typeof(ValidationException), exception);
     }
@@ -158,7 +160,7 @@ public sealed class EventServiceTests : IDisposable
             TotalSeats = 10,
         };
 
-        var exception = await Assert.ThrowsAsync<ValidationException>(() => 
+        var exception = await Assert.ThrowsAsync<ValidationException>(() =>
         _eventService.CreateEventAsync(CreateEventDto, cancellationToken));
         Assert.IsType(typeof(ValidationException), exception);
     }
@@ -175,7 +177,7 @@ public sealed class EventServiceTests : IDisposable
             TotalSeats = 10,
         };
 
-        var exception = await Assert.ThrowsAsync<ValidationException>(() => 
+        var exception = await Assert.ThrowsAsync<ValidationException>(() =>
         _eventService.CreateEventAsync(CreateEventDto, cancellationToken));
         Assert.IsType(typeof(ValidationException), exception);
     }
@@ -184,7 +186,7 @@ public sealed class EventServiceTests : IDisposable
     public async Task CreateEventAsync_WithTitleWhitespace_TrimsTitleAndCreatesEvent()
     {
         var futureDate = DateTime.UtcNow.AddDays(1);
-        var CreateEventDto = new CreateEventDto
+        var createEventDto = new CreateEventDto
         {
             Title = "  Test Event  ",
             StartAt = futureDate,
@@ -192,7 +194,7 @@ public sealed class EventServiceTests : IDisposable
             TotalSeats = 10,
         };
 
-        var result = await _eventService.CreateEventAsync(CreateEventDto, cancellationToken);
+        var result = await _eventService.CreateEventAsync(createEventDto, cancellationToken);
 
         Assert.Equal("Test Event", result.Title);
     }
@@ -226,7 +228,7 @@ public sealed class EventServiceTests : IDisposable
     {
         var invalidId = Guid.NewGuid();
 
-        var exception = await Assert.ThrowsAsync<KeyNotFoundException>(() => 
+        var exception = await Assert.ThrowsAsync<KeyNotFoundException>(() =>
         _eventService.GetEventByIdAsync(invalidId, cancellationToken));
         Assert.Equal($"Событие {invalidId} не найдено", exception.Message);
     }

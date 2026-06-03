@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Project.Services;
+﻿using Application.Services;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Project.Controllers
 {

@@ -1,7 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Project.Models;
-using Project.Services;
-using System.Threading.Tasks;
+﻿using Application.DTO;
+using Application.Services;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Project.Controllers
 {
@@ -72,7 +71,7 @@ namespace Project.Controllers
             }
             var ev = await _eventService.CreateEventAsync(createEventDto, cancellationToken);
             //return new CreatedAtActionResult(nameof(Get), nameof(Get), new {id = ev.Id}, ev);
-            return CreatedAtAction(nameof(Create), new {id = ev.Id}, ev);
+            return CreatedAtAction(nameof(Create), new { id = ev.Id }, ev);
         }
         /// <summary>
         /// Обновление события
@@ -81,7 +80,7 @@ namespace Project.Controllers
         /// <param name="evente"></param>
         /// <returns></returns>
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody]UpdateEventDto updateEventDto)
+        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateEventDto updateEventDto)
         {
             if (await _eventService.GetEventByIdAsync(id, cancellationToken) == null) return NotFound();
             await _eventService.UpdateEventAsync(id, updateEventDto, cancellationToken);

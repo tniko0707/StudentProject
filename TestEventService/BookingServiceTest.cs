@@ -1,13 +1,13 @@
 ﻿namespace TestEventService;
 
-
+using Application.DTO;
+using Application.Repositories;
+using Application.Services;
+using Domain.Models;
+using Infrastructure.DataAccess;
+using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Project.DataAccess;
-using Project.Models;
-using Project.Repositories;
-using Project.Services;
 
 public sealed class BookingServiceTests : IDisposable
 {

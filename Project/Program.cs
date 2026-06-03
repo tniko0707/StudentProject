@@ -1,11 +1,11 @@
+using Application;
+using Infrastructure;
+using Infrastructure.DataAccess;
 using Microsoft.EntityFrameworkCore;
-using Project.DataAccess;
 using Project.Models;
-using Project.Repositories;
-using Project.Services;
 using System.Reflection;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
@@ -19,17 +19,15 @@ builder.Services.AddSwaggerGen(options =>
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException("Connection string 'Default' not found.");
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(connectionString));
 
-builder.Services.AddScoped<IBookingRepository, BookingRepository>();
-builder.Services.AddScoped<IEventRepository, EventRepository>();
-builder.Services.AddScoped<IEventService, EventService>();
-builder.Services.AddScoped<IBookingService, BookingService>();
+builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddApplication();
+//builder.Services.AddScoped<IBookingRepository, BookingRepository>();
+//builder.Services.AddScoped<IEventRepository, EventRepository>();
+//builder.Services.AddScoped<IEventService, EventService>();
+//builder.Services.AddScoped<IBookingService, BookingService>();
 
-builder.Services.AddHostedService<BookingBackgroundService>();
+//builder.Services.AddHostedService<BookingBackgroundService>();
 
 builder.Services.AddRouting(options =>
 {

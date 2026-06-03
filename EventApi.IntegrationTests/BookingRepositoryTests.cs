@@ -1,15 +1,14 @@
 ﻿
+using Domain.Models;
+using Infrastructure.DataAccess;
+using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
-using Project.DataAccess;
-using Project.Models;
-using Project.Repositories;
-using System.Threading.Tasks;
 using Testcontainers.PostgreSql;
 
 namespace EventApi.IntegrationTests
 {
-    public class BookingRepositoryTests: IAsyncLifetime
+    public class BookingRepositoryTests : IAsyncLifetime
     {
         private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:16-alpine")
             .WithDatabase("test")
@@ -59,7 +58,7 @@ namespace EventApi.IntegrationTests
             Event evente = new Event("Test", "Descr", DateTime.UtcNow, DateTime.UtcNow.AddDays(1), 10);
             EventRepository eventRepository = new EventRepository(context);
             await eventRepository.AddAsync(evente);
-            
+
             //act
             await using var bookingContext = CreateContext();
             Booking booking = Booking.CreatePending(evente.Id);
