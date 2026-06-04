@@ -91,3 +91,13 @@ ASP.NET Core REST API для управления событиями.
 
 ```
    Update-Database
+```
+## Состав проекта
+Проект разбит на 4 слоя. 
+Domain => Application => Infrastructure => Presentation
+
+### Состав каждого слоя проекта:
+- Domain — доменные сущности, value objects, доменные исключения. Не зависит ни от чего внешнего.
+- Application — use cases, сервисы, интерфейсы портов (репозитории, шлюзы), DTO. Зависит только от Domain.
+- Infrastructure — реализации портов: репозитории, DbContext, внешние клиенты. Зависит от Application и Domain.
+- Presentation — контроллеры/Minimal API эндпоинты, HTTP-маппинг, регистрация зависимостей. Зависит от Application и Infrastructure.
