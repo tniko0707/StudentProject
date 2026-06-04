@@ -2,7 +2,7 @@
 using Application.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Project.Controllers
+namespace Presentation.Controllers
 {
     [ApiController]
     [Route("/[controller]")]

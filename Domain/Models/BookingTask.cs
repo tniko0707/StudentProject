@@ -1,4 +1,4 @@
-﻿namespace Project.Models
+﻿namespace Domain.Models
 {
     public class BookingTask
     {

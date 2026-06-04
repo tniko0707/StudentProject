@@ -1,7 +1,8 @@
 ﻿
+using Domain.Models;
 using System.Collections.Concurrent;
 
-namespace Project.Models
+namespace Presentation.Models
 {
     public class InMemoryBookingTaskQueue : IBookingTaskQueue
     {

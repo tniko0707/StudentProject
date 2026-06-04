@@ -1,4 +1,7 @@
-﻿namespace Project.Models
+﻿using Domain.Models;
+
+
+namespace Presentation.Models
 {
     public interface IBookingTaskQueue
     {

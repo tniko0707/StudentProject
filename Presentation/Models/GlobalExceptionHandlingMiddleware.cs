@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 
-namespace Project.Models
+namespace Presentation.Models
 {
     /// <summary>
     /// middleware для глобальной обработки исключений
