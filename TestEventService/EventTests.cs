@@ -3,6 +3,7 @@
 using Application.DTO;
 using Application.Repositories;
 using Application.Services;
+using Domain.Models;
 using Infrastructure.DataAccess;
 using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -14,7 +15,9 @@ public sealed class EventServiceTests : IDisposable
     private readonly ServiceProvider _serviceProvider;
     private readonly IServiceScope _scope;
     private readonly IEventService _eventService;
+    private readonly IUserService _userService;
     private readonly CancellationToken cancellationToken;
+    private readonly User _user;
     public EventServiceTests()
     {
         var dbName = Guid.NewGuid().ToString();
@@ -22,12 +25,23 @@ public sealed class EventServiceTests : IDisposable
         services.AddDbContext<AppDbContext>(options =>
             options.UseInMemoryDatabase(dbName));
         services.AddScoped<IEventService, EventService>();
+        services.AddScoped<IUserService, UserService>();
         services.AddScoped<IBookingRepository, BookingRepository>();
         services.AddScoped<IEventRepository, EventRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
 
         _serviceProvider = services.BuildServiceProvider();
         _scope = _serviceProvider.CreateScope();
         _eventService = _scope.ServiceProvider.GetRequiredService<IEventService>();
+
+        _user = new User()
+        {
+            UserId = Guid.NewGuid(),
+            Login = "log",
+            PasswordHash = PasswordHasher.HashPassword("abracadabra"),
+            Role = Role.Admin,
+            Bookings = new List<Booking>()
+        };
 
         cancellationToken = new CancellationTokenSource().Token;
     }

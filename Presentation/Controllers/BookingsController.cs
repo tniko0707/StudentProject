@@ -1,5 +1,7 @@
 ﻿using Application.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Presentation.Controllers
 {
@@ -9,17 +11,20 @@ namespace Presentation.Controllers
     /// <param name="bookingService"></param>
     [ApiController]
     [Route("/[controller]")]
+    [Authorize]
     public class BookingsController : Controller
     {
         private CancellationToken _cancellationToken;
         private readonly IBookingService _bookingService;
         private readonly IEventService _eventService;
+        private readonly IUserService _userService;
         public BookingsController(IBookingService bookingService,
-            IEventService eventService)
+            IEventService eventService, IUserService userService)
         {
             _cancellationToken = new CancellationTokenSource().Token;
             _bookingService = bookingService;
             _eventService = eventService;
+            _userService = userService;
         }
 
         /// <summary>
@@ -30,7 +35,12 @@ namespace Presentation.Controllers
         [HttpGet("{id}", Name = "GetBooking")]
         public async Task<IActionResult> Get(Guid id)
         {
-            var booking = await _bookingService.GetBookingByIdAsync(id, _cancellationToken);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null) return BadRequest("Идентификатор пользовател не найден");
+            Guid userId = Guid.Parse(userIdClaim.Value);
+            var user = await _userService.FindByIdAsync(userId, _cancellationToken);
+
+            var booking = await _bookingService.GetBookingByIdAsync(user, id, _cancellationToken);
 
             if (booking == null) return NotFound();
             return Ok(booking);
@@ -44,11 +54,30 @@ namespace Presentation.Controllers
         [HttpPost("{eventId}/book")]
         public async Task<IActionResult> CreateBookingAsync(Guid eventId)
         {
-            if (await _eventService.GetEventByIdAsync(eventId, _cancellationToken) == null) return NotFound();
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null) return BadRequest("Идентификатор пользовател не найден");
+            Guid userId = Guid.Parse(userIdClaim.Value);
+            var user = await _userService.FindByIdAsync(userId, _cancellationToken);
 
-            var booking = await _bookingService.CreateBookingAsync(eventId, _cancellationToken);
+            var eventt = await _eventService.GetEventByIdAsync(eventId, _cancellationToken);
+            if (eventt == null) return NotFound();
+
+            var booking = await _bookingService.CreateBookingAsync(user, eventId, _cancellationToken);
 
             return AcceptedAtRoute("GetBooking", new { Id = booking.Id }, booking);
+        }
+
+        [HttpDelete("{bookingId}/cancel")]
+        public async Task<IActionResult> CancelBooking(Guid bookingId)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null) return BadRequest("Идентификатор пользовател не найден");
+            Guid userId = Guid.Parse(userIdClaim.Value);
+            var user = await _userService.FindByIdAsync(userId, _cancellationToken);
+
+            await _bookingService.CancelBooking(user, bookingId, _cancellationToken);
+
+            return Ok("Бронь успешно отменена");
         }
 
         [HttpDelete]

@@ -12,5 +12,6 @@ namespace Application.Repositories
         Task ConfirmBookingAsync(Guid id, CancellationToken ct = default);
         Task SaveChangesAsync(CancellationToken ct = default);
         Task<int> DeleteDataFromTable(CancellationToken ct = default);
+        Task<List<Booking>> GetAllUserBookings(Guid userId, CancellationToken ct = default);
     }
 }

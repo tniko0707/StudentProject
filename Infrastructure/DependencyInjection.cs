@@ -1,4 +1,5 @@
 ﻿using Application.Repositories;
+using Application.Services;
 using Infrastructure.DataAccess;
 using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +19,8 @@ namespace Infrastructure
 
             services.AddScoped<IBookingRepository, BookingRepository>();
             services.AddScoped<IEventRepository, EventRepository>();
+            services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IJwtTokenCreator, JwtTokenCreator>();
 
             return services;
         }

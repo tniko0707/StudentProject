@@ -7,6 +7,7 @@ namespace Infrastructure.DataAccess
     {
         public DbSet<Event> Events { get; set; }
         public DbSet<Booking> Bookings { get; set; }
+        public DbSet<User> Users { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {

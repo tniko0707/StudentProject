@@ -12,31 +12,46 @@ namespace Domain.Models
         {
 
         }
-        public Booking(Guid eventId, BookingStatus status, DateTime createdAt)
+        public Booking(Guid userId, Guid eventId, BookingStatus status, DateTime createdAt)
         {
+            UserId = userId;
             Id = Guid.NewGuid();
             EventId = eventId;
             Status = status;
             CreatedAt = createdAt;
         }
 
+
+
         [Required]
         public Guid Id { get;}
+
         [Required]
         public Guid EventId {  get; }
+
         [Required]
         public BookingStatus Status { get; set; }
+
         [Required]
         public DateTime CreatedAt { get;}
         public DateTime? ProcessedAt { get; set; }
         [JsonIgnore]
         public Event? Event { get; set; }
+        [Required]
+        public Guid UserId { get; set; }
+        public User? User { get; set; }
 
-        public static Booking CreatePending(Guid eventId)
+        public static Booking CreatePending(Guid userId, Guid eventId)
         {
             if (eventId == Guid.Empty) throw new ValidationException(nameof(eventId));
-            return new Booking(eventId, BookingStatus.Pending, DateTime.UtcNow);
+            return new Booking(userId, eventId, BookingStatus.Pending, DateTime.UtcNow);
+        }
 
+        public bool CancelBooking()
+        {
+            if (Status is BookingStatus.Cancelled) return false;
+            Status = BookingStatus.Cancelled; 
+            return true;
         }
     }
 }

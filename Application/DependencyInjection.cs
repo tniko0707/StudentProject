@@ -10,6 +10,7 @@ namespace Application
         {
             services.AddScoped<IBookingService, BookingService>();
             services.AddScoped<IEventService, EventService>();
+            services.AddScoped<IUserService, UserService>();
 
             services.AddHostedService<BookingBackgroundService>();
             return services;

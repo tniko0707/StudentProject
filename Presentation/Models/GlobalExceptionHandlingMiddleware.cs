@@ -81,6 +81,9 @@ namespace Presentation.Models
                 ArgumentNullException knfe => StatusCodes.Status404NotFound,
                 InvalidOperationException ioe => StatusCodes.Status404NotFound,
                 NoAvailableSeatsException ne => StatusCodes.Status409Conflict,
+                BookingLimitException blex => StatusCodes.Status409Conflict,
+                BookingPastEventException bpex => StatusCodes.Status400BadRequest,
+                NoRightsToChangeException nrtce => StatusCodes.Status403Forbidden,
                 _ => StatusCodes.Status500InternalServerError
             };
     }
