@@ -1,6 +1,7 @@
 ﻿using Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Presentation.Extensions;
 using System.Security.Claims;
 
 namespace Presentation.Controllers
@@ -35,9 +36,7 @@ namespace Presentation.Controllers
         [HttpGet("{id}", Name = "GetBooking")]
         public async Task<IActionResult> Get(Guid id)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null) return BadRequest("Идентификатор пользовател не найден");
-            Guid userId = Guid.Parse(userIdClaim.Value);
+            Guid userId = User.GetUserId();
             var user = await _userService.FindByIdAsync(userId, _cancellationToken);
 
             var booking = await _bookingService.GetBookingByIdAsync(user, id, _cancellationToken);
@@ -54,9 +53,7 @@ namespace Presentation.Controllers
         [HttpPost("{eventId}/book")]
         public async Task<IActionResult> CreateBookingAsync(Guid eventId)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null) return BadRequest("Идентификатор пользовател не найден");
-            Guid userId = Guid.Parse(userIdClaim.Value);
+            Guid userId = User.GetUserId();
             var user = await _userService.FindByIdAsync(userId, _cancellationToken);
 
             var eventt = await _eventService.GetEventByIdAsync(eventId, _cancellationToken);
@@ -70,9 +67,7 @@ namespace Presentation.Controllers
         [HttpDelete("{bookingId}/cancel")]
         public async Task<IActionResult> CancelBooking(Guid bookingId)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null) return BadRequest("Идентификатор пользовател не найден");
-            Guid userId = Guid.Parse(userIdClaim.Value);
+            Guid userId = User.GetUserId();
             var user = await _userService.FindByIdAsync(userId, _cancellationToken);
 
             await _bookingService.CancelBooking(user, bookingId, _cancellationToken);

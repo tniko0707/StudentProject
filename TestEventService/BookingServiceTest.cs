@@ -8,6 +8,7 @@ using Infrastructure.DataAccess;
 using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 public sealed class BookingServiceTests : IDisposable
 {
@@ -69,6 +70,60 @@ public sealed class BookingServiceTests : IDisposable
     }
 
     #region CreateBookingAsync Tests
+
+
+    [Fact]
+    public async Task CreateBooking_WithPastDate()
+    {
+        var created = await _eventService.CreateEventAsync(new CreateEventDto
+        {
+            Title = "Test Past Event",
+            StartAt = DateTime.UtcNow.AddSeconds(1),
+            EndAt = DateTime.UtcNow.AddSeconds(4),
+            TotalSeats = 7
+        }, cancellationToken);
+
+        await Task.Delay(7000);
+        
+        await Assert.ThrowsAsync<BookingPastEventException>(
+            () =>  _bookingService.CreateBookingAsync(_user, created.Id, cancellationToken));
+    }
+
+    [Fact]
+    public async Task CreateBooking_WithOver10Available()
+    {
+        var eventId = await CreateTestEventAsync();
+        for (int i = 0; i < 10; i++)
+        {
+            var result = await _bookingService.CreateBookingAsync(_user, eventId, cancellationToken);
+        }
+        await Assert.ThrowsAsync<BookingLimitException>(
+            () => _bookingService.CreateBookingAsync(_user, eventId, cancellationToken));
+    }
+
+    [Fact]
+    public async Task CreateBooking_WithOver10Available_WithDifferentUsers()
+    {
+        var _user2 = new User()
+        {
+            UserId = Guid.NewGuid(),
+            Login = "log2",
+            PasswordHash = PasswordHasher.HashPassword("abracadabra"),
+            Role = Role.Admin,
+            Bookings = new List<Booking>()
+        };
+
+        var eventId = await CreateTestEventAsync(totalSeats: 12);
+        for (int i = 0; i < 10; i++)
+        {
+            var result = await _bookingService.CreateBookingAsync(_user, eventId, cancellationToken);
+        }
+        var result2 = await _bookingService.CreateBookingAsync(_user2, eventId, cancellationToken);
+
+        Assert.NotNull(result2);
+
+    }
+
 
     [Fact]
     public async Task CreateBookingAsync_WithValidEventId_ReturnsBookingInfoWithPendingStatus()

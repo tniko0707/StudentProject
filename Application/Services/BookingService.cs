@@ -19,18 +19,20 @@ namespace Application.Services
         /// <param name="eventId"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public async Task<Booking> CreateBookingAsync(User user, Guid eventId, CancellationToken cancellationToken)
+        public async Task<Booking> CreateBookingAsync(User user, Guid eventId, CancellationToken ct)
         {
-            await _semaphore.WaitAsync(cancellationToken);
+            await _semaphore.WaitAsync(ct);
             try
             {
-
-                if (user.Bookings.Count >= 10)
+                var userBookings = await _bookingRepository.GetAllUserBookings(user.UserId, ct);
+                if (userBookings.Where(b => 
+                            b.Status == BookingStatus.Pending 
+                            || b.Status == BookingStatus.Confirmed).Count() >= 10)
                 {
                     throw new BookingLimitException("Превышение событий у пользователя");
                 }
                 Event? eventForBooking = await _eventRepository
-                    .FindByIdAsync(eventId, cancellationToken);
+                    .FindByIdAsync(eventId, ct);
                 if (eventForBooking == null)
                 {
                     throw new KeyNotFoundException($"Событие {eventId} не найдено");
@@ -105,7 +107,7 @@ namespace Application.Services
             return await _bookingRepository.DeleteDataFromTable() > 0;
         }
 
-        public async Task<bool> CancelBooking(User user, Guid bookingId, CancellationToken cancellationToken)
+        public async Task<bool> CancelBooking(User user, Guid bookingId, CancellationToken ct)
         {
             var booking = await _bookingRepository.FindByIdAsync(bookingId);
             if (booking == null)
@@ -126,6 +128,7 @@ namespace Application.Services
             }
 
             booking.CancelBooking();
+            await _bookingRepository.SaveChangesAsync(ct);
 
             return true;
         }

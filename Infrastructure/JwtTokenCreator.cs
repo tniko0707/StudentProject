@@ -22,8 +22,8 @@ namespace Infrastructure
             var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),
-                new Claim("role", user.Role.ToString()),
-                new Claim("login", user.Login),
+                new Claim(ClaimTypes.Role, user.Role.ToString()),
+                new Claim(ClaimTypes.Email, user.Login),
             };
 
             var key = new SymmetricSecurityKey(

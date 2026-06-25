@@ -9,6 +9,7 @@ using Microsoft.OpenApi.Models;
 using Presentation.Models;
 using System;
 using System.Reflection;
+using System.Security.Claims;
 using System.Text;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -71,8 +72,11 @@ builder.Services.AddAuthentication(options =>
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 }).AddJwtBearer(options =>
 {
+    options.MapInboundClaims = true;
+
     options.TokenValidationParameters = new TokenValidationParameters()
     {
+
         ValidateIssuer = true,
         ValidIssuer = jwtSettings.Issuer,
 
@@ -85,6 +89,9 @@ builder.Services.AddAuthentication(options =>
 
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero,
+
+        NameClaimType = ClaimTypes.NameIdentifier,
+        RoleClaimType = ClaimTypes.Role
     }; 
 });
 

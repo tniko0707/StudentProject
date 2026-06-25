@@ -29,9 +29,9 @@ namespace Infrastructure.Repositories
             return await _db.Users.FirstOrDefaultAsync(u => u.Login == login, ct);
         }
 
-        public Task<User?> FindByIdAsync(Guid userId, CancellationToken ct = default)
+        public async Task<User?> FindByIdAsync(Guid userId, CancellationToken ct = default)
         {
-            throw new NotImplementedException();
+            return await _db.Users.FirstOrDefaultAsync(u => u.UserId == userId);
         }
     }
 }
