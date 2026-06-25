@@ -31,6 +31,8 @@ ASP.NET Core REST API для управления событиями.
 3. дата конца
 4. номер страницы для отображения
 5. число элементов на странице
+### Регистрация нового пользователя POST /auth/register
+### Авторизация пользователя POST /auth/login
 ### Получение события по id GET /events/{id}
 ### Создание нового события POST /events
 ### Обновление события PUT /events/{id}
@@ -101,3 +103,27 @@ Domain => Application => Infrastructure => Presentation
 - Application — use cases, сервисы, интерфейсы портов (репозитории, шлюзы), DTO. Зависит только от Domain.
 - Infrastructure — реализации портов: репозитории, DbContext, внешние клиенты. Зависит от Application и Domain.
 - Presentation — контроллеры/Minimal API эндпоинты, HTTP-маппинг, регистрация зависимостей. Зависит от Application и Infrastructure.
+
+## Конфигурация JWT
+appsettings.json
+```
+{
+  "JWTSettings": {
+    "Issuer": "StudentProjectApi",
+    "Audience": "StudentProjectApiClients",
+    "Key": "REPLACE_ME_WITH_A_SECURE_SECRET",
+    "ExpiresInMinutes": 60
+  }
+}
+```
+
+## Авторизуйтесь в Swagger UI
+Скопируйте значение accessToken.
+Нажмите кнопку Authorize 🔒 в правом верхнем углу.
+В поле Value вставьте токен без слова Bearer:
+
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Нажмите Authorize → Close.
+Swagger автоматически добавит заголовок Authorization: Bearer <token>
+ко всем последующим запросам.
+
