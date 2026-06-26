@@ -84,40 +84,6 @@ namespace EventApi.IntegrationTests
         }
 
         [Fact]
-        public async Task LimitBookings()
-        {
-            await ResetDatabaseAsync();
-
-            //arrange
-            await using var context = CreateContext();
-            Event evente = new Event("Test", "Descr", DateTime.UtcNow, DateTime.UtcNow.AddDays(1), 10);
-            EventRepository eventRepository = new EventRepository(context);
-            await eventRepository.AddAsync(evente);
-            User user = new User()
-            {
-                UserId = Guid.NewGuid(),
-                Login = "log",
-                PasswordHash = PasswordHasher.HashPassword("abracadabra"),
-                Role = Role.Admin,
-                Bookings = new List<Booking>()
-            };
-            UserRepository userRepository = new UserRepository(context);
-            await userRepository.AddAsync(user);
-
-            //act
-            await using var bookingContext = CreateContext();
-            BookingRepository bookingRepository = new BookingRepository(bookingContext);
-            for (int i = 0; i < 9;  i++)
-            {
-                Booking booking = Booking.CreatePending(user.UserId, evente.Id);
-                await bookingRepository.AddAsync(booking);
-            }
-
-            await
-
-        }
-
-        [Fact]
         public async Task ConfirmBooking()
         {
             await ResetDatabaseAsync();

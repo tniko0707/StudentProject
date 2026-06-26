@@ -124,6 +124,52 @@ public sealed class BookingServiceTests : IDisposable
 
     }
 
+    [Fact]
+    public async Task CancelBooking_DecreaseUserBookings()
+    {
+        var eventId = await CreateTestEventAsync();
+        var booking = await _bookingService.CreateBookingAsync(_user, eventId, cancellationToken);
+        await _bookingService.CancelBooking(_user, booking.Id, cancellationToken);
+
+        Assert.True(booking.Status == BookingStatus.Cancelled);
+    }
+
+    [Fact]
+    public async Task CancelBooking_ByAnotherUser_Error()
+    {
+        var _user2 = new User()
+        {
+            UserId = Guid.NewGuid(),
+            Login = "log2",
+            PasswordHash = PasswordHasher.HashPassword("abracadabra"),
+            Role = Role.User,
+            Bookings = new List<Booking>()
+        };
+        var eventId = await CreateTestEventAsync();
+        var booking = await _bookingService.CreateBookingAsync(_user, eventId, cancellationToken);
+
+        await Assert.ThrowsAsync<NoRightsToChangeException>(() =>
+            _bookingService.CancelBooking(_user2, booking.Id, cancellationToken)
+        );
+    }
+
+    [Fact]
+    public async Task CancelBooking_ByAdmin()
+    {
+        var _user2 = new User()
+        {
+            UserId = Guid.NewGuid(),
+            Login = "log2",
+            PasswordHash = PasswordHasher.HashPassword("abracadabra"),
+            Role = Role.Admin,
+            Bookings = new List<Booking>()
+        };
+        var eventId = await CreateTestEventAsync();
+        var booking = await _bookingService.CreateBookingAsync(_user, eventId, cancellationToken);
+        await _bookingService.CancelBooking(_user2, booking.Id, cancellationToken);
+
+        Assert.True(booking.Status == BookingStatus.Cancelled);
+    }
 
     [Fact]
     public async Task CreateBookingAsync_WithValidEventId_ReturnsBookingInfoWithPendingStatus()
