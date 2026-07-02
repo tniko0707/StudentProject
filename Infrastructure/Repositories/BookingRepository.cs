@@ -54,5 +54,11 @@ namespace Infrastructure.Repositories
         {
             return await _db.Bookings.ExecuteDeleteAsync(ct);
         }
+
+        public async Task<List<Booking>> GetAllUserBookings(Guid userId, CancellationToken ct=default)
+        {
+            var bookings = await _db.Bookings.Where(b => b.UserId == userId).ToListAsync(ct);
+            return bookings;
+        }
     }
 }

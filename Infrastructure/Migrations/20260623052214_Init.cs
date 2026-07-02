@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -29,6 +29,20 @@ namespace Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "users",
+                columns: table => new
+                {
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Login = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Role = table.Column<int>(type: "integer", nullable: false),
+                    PasswordHash = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_users", x => x.UserId);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "bookings",
                 columns: table => new
                 {
@@ -36,7 +50,8 @@ namespace Infrastructure.Migrations
                     EventId = table.Column<Guid>(type: "uuid", nullable: false),
                     Status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    ProcessedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    ProcessedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -47,12 +62,29 @@ namespace Infrastructure.Migrations
                         principalTable: "events",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_bookings_users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "users",
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
                 name: "IX_bookings_EventId",
                 table: "bookings",
                 column: "EventId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_bookings_UserId",
+                table: "bookings",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_users_Login",
+                table: "users",
+                column: "Login",
+                unique: true);
         }
 
         /// <inheritdoc />
@@ -63,6 +95,9 @@ namespace Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "events");
+
+            migrationBuilder.DropTable(
+                name: "users");
         }
     }
 }

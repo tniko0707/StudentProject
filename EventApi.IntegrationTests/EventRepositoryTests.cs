@@ -72,6 +72,16 @@ namespace EventApi.IntegrationTests
             Event evente = new Event("Test", "Descr", DateTime.UtcNow, DateTime.UtcNow.AddDays(1), 10);
 
             var repository = new EventRepository(context);
+            User user = new User()
+            {
+                UserId = Guid.NewGuid(),
+                Login = "log",
+                PasswordHash = PasswordHasher.HashPassword("abracadabra"),
+                Role = Role.Admin,
+                Bookings = new List<Booking>()
+            };
+            UserRepository userRepository = new UserRepository(context);
+            await userRepository.AddAsync(user);
 
             //act
             await repository.AddAsync(evente);

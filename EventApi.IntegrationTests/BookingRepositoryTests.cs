@@ -58,10 +58,21 @@ namespace EventApi.IntegrationTests
             Event evente = new Event("Test", "Descr", DateTime.UtcNow, DateTime.UtcNow.AddDays(1), 10);
             EventRepository eventRepository = new EventRepository(context);
             await eventRepository.AddAsync(evente);
-
+            User user = new User()
+            {
+                UserId = Guid.NewGuid(),
+                Login = "log",
+                PasswordHash = PasswordHasher.HashPassword("abracadabra"),
+                Role = Role.Admin,
+                Bookings = new List<Booking>()
+            };
+            UserRepository userRepository = new UserRepository(context);
+            await userRepository.AddAsync(user);
+            
             //act
+
             await using var bookingContext = CreateContext();
-            Booking booking = Booking.CreatePending(evente.Id);
+            Booking booking = Booking.CreatePending(user.UserId, evente.Id);
             BookingRepository bookingRepository = new BookingRepository(bookingContext);
             await bookingRepository.AddAsync(booking);
 
@@ -82,10 +93,20 @@ namespace EventApi.IntegrationTests
             Event evente = new Event("Test", "Descr", DateTime.UtcNow, DateTime.UtcNow.AddDays(1), 10);
             EventRepository eventRepository = new EventRepository(context);
             await eventRepository.AddAsync(evente);
+            User user = new User()
+            {
+                UserId = Guid.NewGuid(),
+                Login = "log",
+                PasswordHash = PasswordHasher.HashPassword("abracadabra"),
+                Role = Role.Admin,
+                Bookings = new List<Booking>()
+            };
+            UserRepository userRepository = new UserRepository(context);
+            await userRepository.AddAsync(user);
 
             //act
             await using var bookingContext = CreateContext();
-            Booking booking = Booking.CreatePending(evente.Id);
+            Booking booking = Booking.CreatePending(user.UserId, evente.Id);
             BookingRepository bookingRepository = new BookingRepository(bookingContext);
             await bookingRepository.AddAsync(booking);
 
@@ -108,12 +129,22 @@ namespace EventApi.IntegrationTests
             Event evente = new Event("Test", "Descr", DateTime.UtcNow, DateTime.UtcNow.AddDays(1), 10);
             EventRepository eventRepository = new EventRepository(context);
             await eventRepository.AddAsync(evente);
+            User user = new User()
+            {
+                UserId = Guid.NewGuid(),
+                Login = "log",
+                PasswordHash = PasswordHasher.HashPassword("abracadabra"),
+                Role = Role.Admin,
+                Bookings = new List<Booking>()
+            };
+            UserRepository userRepository = new UserRepository(context);
+            await userRepository.AddAsync(user);
 
             //act
             await using var contextB = CreateContext();
             BookingRepository bookingRepository = new BookingRepository(contextB);
-            Booking booking = Booking.CreatePending(evente.Id);
-            Booking booking2 = Booking.CreatePending(evente.Id);
+            Booking booking = Booking.CreatePending(user.UserId, evente.Id);
+            Booking booking2 = Booking.CreatePending(user.UserId, evente.Id);
 
             await bookingRepository.AddAsync(booking);
             await bookingRepository.AddAsync(booking2);
@@ -135,12 +166,22 @@ namespace EventApi.IntegrationTests
             Event evente = new Event("Test", "Descr", DateTime.UtcNow, DateTime.UtcNow.AddDays(1), 10);
             EventRepository eventRepository = new EventRepository(context);
             await eventRepository.AddAsync(evente);
+            User user = new User()
+            {
+                UserId = Guid.NewGuid(),
+                Login = "log",
+                PasswordHash = PasswordHasher.HashPassword("abracadabra"),
+                Role = Role.Admin,
+                Bookings = new List<Booking>()
+            };
+            UserRepository userRepository = new UserRepository(context);
+            await userRepository.AddAsync(user);
 
             //act
             await using var contextB = CreateContext();
             BookingRepository bookingRepository = new BookingRepository(contextB);
-            Booking booking = Booking.CreatePending(evente.Id);
-            Booking booking2 = Booking.CreatePending(evente.Id);
+            Booking booking = Booking.CreatePending(user.UserId, evente.Id);
+            Booking booking2 = Booking.CreatePending(user.UserId, evente.Id);
 
             await bookingRepository.AddAsync(booking);
             await bookingRepository.AddAsync(booking2);
@@ -162,13 +203,23 @@ namespace EventApi.IntegrationTests
             Event evente = new Event("Test", "Descr", DateTime.UtcNow, DateTime.UtcNow.AddDays(1), 10);
             EventRepository eventRepository = new EventRepository(context);
             await eventRepository.AddAsync(evente);
+            User user = new User()
+            {
+                UserId = Guid.NewGuid(),
+                Login = "log",
+                PasswordHash = PasswordHasher.HashPassword("abracadabra"),
+                Role = Role.Admin,
+                Bookings = new List<Booking>()
+            };
+            UserRepository userRepository = new UserRepository(context);
+            await userRepository.AddAsync(user);
 
             //act
             await using var contextB = CreateContext();
             BookingRepository bookingRepository = new BookingRepository(contextB);
-            Booking booking = Booking.CreatePending(evente.Id);
+            Booking booking = Booking.CreatePending(user.UserId, evente.Id);
             await Task.Delay(2000);
-            Booking booking2 = Booking.CreatePending(evente.Id);
+            Booking booking2 = Booking.CreatePending(user.UserId, evente.Id);
 
             await bookingRepository.AddAsync(booking);
             await bookingRepository.AddAsync(booking2);
@@ -190,12 +241,22 @@ namespace EventApi.IntegrationTests
             Event evente = new Event("Test", "Descr", DateTime.UtcNow, DateTime.UtcNow.AddDays(1), 10);
             EventRepository eventRepository = new EventRepository(context);
             await eventRepository.AddAsync(evente);
+            User user = new User()
+            {
+                UserId = Guid.NewGuid(),
+                Login = "log",
+                PasswordHash = PasswordHasher.HashPassword("abracadabra"),
+                Role = Role.Admin,
+                Bookings = new List<Booking>()
+            };
+            UserRepository userRepository = new UserRepository(context);
+            await userRepository.AddAsync(user);
 
             //act
             await using var contextB = CreateContext();
             BookingRepository bookingRepository = new BookingRepository(contextB);
-            Booking booking = Booking.CreatePending(evente.Id);
-            Booking booking2 = Booking.CreatePending(evente.Id);
+            Booking booking = Booking.CreatePending(user.UserId, evente.Id);
+            Booking booking2 = Booking.CreatePending(user.UserId, evente.Id);
 
             await bookingRepository.AddAsync(booking);
             await bookingRepository.AddAsync(booking2);

@@ -1,11 +1,13 @@
 ﻿using Application.DTO;
 using Application.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Presentation.Controllers
 {
     [ApiController]
     [Route("/[controller]")]
+    [Authorize]
     public class EventsController : Controller
     {
         private readonly IEventService _eventService;
@@ -36,6 +38,8 @@ namespace Presentation.Controllers
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 10)
         {
+
+
             var events = await _eventService.GetFilteredEventsAsync(title, from, to, page, pageSize);
 
             return Ok(events);
@@ -58,6 +62,7 @@ namespace Presentation.Controllers
         /// <param name="createEventDto"></param>
         /// <returns></returns>
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([FromBody] CreateEventDto createEventDto)
         {
             //if (!ModelState.IsValid) return BadRequest();
@@ -80,6 +85,7 @@ namespace Presentation.Controllers
         /// <param name="evente"></param>
         /// <returns></returns>
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateEventDto updateEventDto)
         {
             if (await _eventService.GetEventByIdAsync(id, cancellationToken) == null) return NotFound();
@@ -92,14 +98,13 @@ namespace Presentation.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(Guid id)
         {
             if (await _eventService.GetEventByIdAsync(id, cancellationToken) == null) return NotFound();
             await _eventService.DeleteEventAsync(id, cancellationToken);
             return new OkResult();
         }
-
-
-
+        
     }
 }
