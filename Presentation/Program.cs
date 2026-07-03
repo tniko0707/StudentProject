@@ -1,16 +1,14 @@
 using Application;
-using Application.Services;
 using Infrastructure;
 using Infrastructure.DataAccess;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Presentation.Models;
-using System;
 using System.Reflection;
 using System.Security.Claims;
 using System.Text;
+using Users.Application.Services;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -85,14 +83,14 @@ builder.Services.AddAuthentication(options =>
 
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(jwtSettings.Key)),
+            Encoding.UTF8.GetBytes(jwtSettings.Secret)),
 
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero,
 
         NameClaimType = ClaimTypes.NameIdentifier,
         RoleClaimType = ClaimTypes.Role
-    }; 
+    };
 });
 
 builder.Services.AddAuthorization();

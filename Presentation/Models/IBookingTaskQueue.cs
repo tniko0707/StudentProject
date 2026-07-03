@@ -1,4 +1,4 @@
-﻿using Domain.Models;
+﻿using Bookings.Domain.Models;
 
 
 namespace Presentation.Models

@@ -1,5 +1,5 @@
 ﻿
-using Domain.Models;
+using Bookings.Domain.Models;
 using System.Collections.Concurrent;
 
 namespace Presentation.Models

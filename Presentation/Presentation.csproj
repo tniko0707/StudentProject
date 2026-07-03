@@ -21,6 +21,13 @@
   <ItemGroup>
     <ProjectReference Include="..\Application\Application.csproj" />
     <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
+    <ProjectReference Include="..\Project\Bookings.Application\Bookings.Application.csproj" />
+    <ProjectReference Include="..\Project\Events.Application\Events.Application.csproj" />
+    <ProjectReference Include="..\Project\Users.Application\Users.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Controllers\" />
   </ItemGroup>
 
 </Project>

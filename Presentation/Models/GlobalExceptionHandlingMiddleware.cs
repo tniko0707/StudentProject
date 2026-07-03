@@ -1,4 +1,5 @@
-﻿using Domain.Models;
+﻿using Bookings.Domain.Models;
+using Events.Domain.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 
