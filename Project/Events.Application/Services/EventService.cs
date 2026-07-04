@@ -19,7 +19,7 @@ namespace Events.Application.Services
         /// </summary>
         /// <param name="createEventDto"></param>
         /// <returns></returns>
-        public async Task<Event> CreateEventAsync(CreateEventDto createEventDto, CancellationToken cancellationToken)
+        public async Task<EventResponseDTO> CreateEventAsync(CreateEventDto createEventDto, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(createEventDto.Title) ||
                 string.IsNullOrWhiteSpace(createEventDto.Title) ||
@@ -31,7 +31,7 @@ namespace Events.Application.Services
                 throw new ValidationException();
             }
             if (createEventDto.TotalSeats <= 0) throw new ValidationException();
-            Event evente = new Event
+            Event evente = new 
             (
                 createEventDto.Title.TrimEnd().TrimStart(),
                 createEventDto.Description,
@@ -39,10 +39,10 @@ namespace Events.Application.Services
                 createEventDto.EndAt,
                 createEventDto.TotalSeats
             );
-            await _eventRepository.AddAsync(evente);
+            await _eventRepository.AddAsync(evente, cancellationToken);
             //await _dbContext.Events.AddAsync(evente, cancellationToken);
             //await _dbContext.SaveChangesAsync(cancellationToken);
-            return evente;
+            return MapToDto(evente);
         }
         /// <summary>
         /// Удаление события по id
@@ -51,23 +51,24 @@ namespace Events.Application.Services
         public async Task<bool> DeleteEventAsync(Guid id, CancellationToken cancellationToken)
         {
             //Event @event = await _dbContext.Events.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
-            Event? @event = await _eventRepository.FindByIdAsync(id, cancellationToken);
-            if (@event is null)
-            {
-                return false;
-            }
-            await _eventRepository.RemoveEvent(@event, cancellationToken);
+            Event? @event = await _eventRepository.GetByIdAsync(id, cancellationToken)
+                ?? throw new KeyNotFoundException($"Событие {id} не найдено");
+            
+            await _eventRepository.DeleteAsync(@event, cancellationToken);
             //_dbContext.Events.Remove(@event);
             //await _dbContext.SaveChangesAsync(cancellationToken);
             return true;
         }
+        
         /// <summary>
         /// Получить все события
         /// </summary>
         /// <returns></returns>
-        public async Task<IEnumerable<Event>> GetAllEventsAsync(CancellationToken cancellationToken)
+        public async Task<IEnumerable<EventResponseDTO>> GetAllAsync(CancellationToken cancellationToken)
         {
-            return await _eventRepository.GetAll(cancellationToken);
+            var events = await _eventRepository.GetAllAsync(cancellationToken);
+            
+            return events.Select(e => MapToDto(e));
             //return await _dbContext.Events.ToListAsync(cancellationToken);
         }
         /// <summary>
@@ -75,15 +76,15 @@ namespace Events.Application.Services
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public async Task<Event> GetEventByIdAsync(Guid id, CancellationToken cancellationToken)
+        public async Task<EventResponseDTO> GetEventByIdAsync(Guid id, CancellationToken cancellationToken)
         {
-            Event? eventForBooking = await _eventRepository.FindByIdAsync(id, cancellationToken);
+            Event? eventForBooking = await _eventRepository.GetByIdAsync(id, cancellationToken);
             //var eventForBooking = await _dbContext.Events.FirstOrDefaultAsync(e => e.Id == id, cancellationToken) as Event;
             if (eventForBooking is null)
             {
                 throw new KeyNotFoundException($"Событие {id} не найдено");
             }
-            return eventForBooking;
+            return MapToDto(eventForBooking);
             //return events.First(e => e.Id == id) as Event;//заглушка для теста
 
         }
@@ -92,7 +93,7 @@ namespace Events.Application.Services
         /// </summary>
         /// <param name="id"></param>
         /// <param name="updateEventDto"></param>
-        public async Task<Event?> UpdateEventAsync(Guid id, UpdateEventDto updateEventDto, CancellationToken cancellationToken)
+        public async Task<EventResponseDTO?> UpdateEventAsync(Guid id, UpdateEventDto updateEventDto, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(updateEventDto.Title) ||
                 updateEventDto.Title.Length == 0 ||
@@ -103,31 +104,32 @@ namespace Events.Application.Services
             {
                 throw new ValidationException();
             }
-            Event? eventToUpdate = await GetEventByIdAsync(id, cancellationToken);
+            Event? eventToUpdate = await _eventRepository.GetByIdAsync(id, cancellationToken);
             if (eventToUpdate is null)
             {
                 throw new KeyNotFoundException($"Событие {id} не найдено");
             }
-            if (eventToUpdate != null)
-            {
-                eventToUpdate.Title = updateEventDto.Title;
-                eventToUpdate.Description = updateEventDto.Description;
-                eventToUpdate.StartAt = updateEventDto.StartAt;
-                eventToUpdate.EndAt = updateEventDto.EndAt;
-                eventToUpdate.TotalSeats = updateEventDto.TotalSeats;
-            }
+            eventToUpdate.Update(updateEventDto.Title, 
+                updateEventDto.Description,
+                updateEventDto.StartAt,
+                updateEventDto.EndAt,
+                updateEventDto.TotalSeats);
+ 
             //await _dbContext.SaveChangesAsync(cancellationToken);
             await _eventRepository.SaveChangesAsync(cancellationToken);
-            return eventToUpdate;
+            return MapToDto(eventToUpdate);
         }
         /// <summary>
         /// Получить последнее событие
         /// </summary>
         /// <returns></returns>
-        public async Task<Event?> GetLastEventAsync(CancellationToken cancellationToken)
+        public async Task<EventResponseDTO?> GetLastEventAsync(CancellationToken cancellationToken)
         {
             //return await _dbContext.Events.LastAsync(cancellationToken);
-            return await _eventRepository.GetLast(cancellationToken);
+            var @event = await _eventRepository.GetLastAsync(cancellationToken)
+                ?? throw new KeyNotFoundException("База еще пустая");
+
+            return MapToDto(@event);
         }
 
         /// <summary>
@@ -171,6 +173,20 @@ namespace Events.Application.Services
             query = query.Skip((page - 1) * pageSize).Take(pageSize);
 
             return new PaginatedResult(totalEvents, await query.ToListAsync(cancellationToken), page, pageSize, totalPages);
+        }
+
+        private static EventResponseDTO MapToDto(Event @event)
+        {
+            return new EventResponseDTO()
+            {
+                Id = @event.Id,
+                Title = @event.Title,
+                Description = @event.Description,
+                StartAt = @event.StartAt,
+                EndAt = @event.EndAt,
+                TotalSeats = @event.TotalSeats,
+                AvailableSeats = @event.AvailableSeats,
+            };
         }
     }
 }

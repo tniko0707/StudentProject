@@ -7,7 +7,7 @@ namespace Events.Application.DTO
     public class CreateEventDto
     {
         [Required]
-        public string Title { get; set; }
+        public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
         [Required(ErrorMessage = "Дата начала обязательна для заполнения")]
         public DateTime? StartAt { get; set; } = null;

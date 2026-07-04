@@ -1,7 +1,4 @@
-﻿using Events.Domain.Models;
-using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
-using Users.Domain.Models;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Bookings.Domain.Models
 {
@@ -14,46 +11,48 @@ namespace Bookings.Domain.Models
         {
 
         }
-        public Booking(Guid userId, Guid eventId, BookingStatus status, DateTime createdAt)
+        public Booking(Guid userId, Guid eventId, DateTime createdAt, int seatsCount)
         {
             UserId = userId;
             Id = Guid.NewGuid();
             EventId = eventId;
-            Status = status;
+            Status = BookingStatus.Pending;
             CreatedAt = createdAt;
+            SeatsCount = seatsCount;
         }
 
-        [Required]
         public Guid Id { get; }
-
-        [Required]
         public Guid UserId { get; set; }
-
-        [Required]
         public Guid EventId { get; }
-
-        [Required]
         public BookingStatus Status { get; set; }
-
-        [Required]
         public DateTime CreatedAt { get; }
         public DateTime? ProcessedAt { get; set; }
+        public int SeatsCount { get; set; }
 
-        [JsonIgnore]
-        public Event? Event { get; set; }
-
-        public User? User { get; set; }
-
-        public static Booking CreatePending(Guid userId, Guid eventId)
+        public static Booking CreatePending(Guid userId, Guid eventId, int seatsCount)
         {
+            if (userId == Guid.Empty) throw new ValidationException(nameof(userId));
             if (eventId == Guid.Empty) throw new ValidationException(nameof(eventId));
-            return new Booking(userId, eventId, BookingStatus.Pending, DateTime.UtcNow);
+            return new Booking(userId, eventId, DateTime.UtcNow, seatsCount);
+        }
+
+        public void Reject()
+        {
+            Status = BookingStatus.Rejected;
+            ProcessedAt = DateTime.UtcNow;
+        }
+
+        public void Confirm()
+        {
+            Status = BookingStatus.Confirmed;
+            ProcessedAt = DateTime.UtcNow;
         }
 
         public bool CancelBooking()
         {
             if (Status is BookingStatus.Cancelled) return false;
             Status = BookingStatus.Cancelled;
+            ProcessedAt = DateTime.UtcNow;
             return true;
         }
     }

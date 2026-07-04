@@ -36,8 +36,6 @@ namespace Events.Presentation.Controllers
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 10)
         {
-
-
             var events = await _eventService.GetFilteredEventsAsync(title, from, to, page, pageSize);
 
             return Ok(events);
@@ -48,7 +46,7 @@ namespace Events.Presentation.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("{id}")]
-        public async Task<IActionResult> Get(Guid id)
+        public async Task<IActionResult> GetById(Guid id)
         {
             var evente = await _eventService.GetEventByIdAsync(id, cancellationToken);
             if (evente == null) return NotFound();

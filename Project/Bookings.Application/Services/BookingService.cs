@@ -35,7 +35,7 @@ namespace Bookings.Application.Services
                     throw new BookingLimitException("Превышение событий у пользователя");
                 }
                 Event? eventForBooking = await _eventRepository
-                    .FindByIdAsync(eventId, ct);
+                    .GetByIdAsync(eventId, ct);
                 if (eventForBooking == null)
                 {
                     throw new KeyNotFoundException($"Событие {eventId} не найдено");

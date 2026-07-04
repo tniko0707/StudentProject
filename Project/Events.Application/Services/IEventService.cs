@@ -6,12 +6,12 @@ namespace Events.Application.Services
 {
     public interface IEventService
     {
-        Task<IEnumerable<Event>> GetAllEventsAsync(CancellationToken cancellationToken);
-        Task<Event?> GetEventByIdAsync(Guid id, CancellationToken cancellationToken);
-        Task<Event> CreateEventAsync(CreateEventDto createEventDto, CancellationToken cancellationToken);
-        Task<Event?> UpdateEventAsync(Guid id, UpdateEventDto updateEventDto, CancellationToken cancellationToken);
+        Task<IEnumerable<EventResponseDTO>> GetAllAsync(CancellationToken cancellationToken);
+        Task<EventResponseDTO?> GetEventByIdAsync(Guid id, CancellationToken cancellationToken);
+        Task<EventResponseDTO> CreateEventAsync(CreateEventDto createEventDto, CancellationToken cancellationToken);
+        Task<EventResponseDTO?> UpdateEventAsync(Guid id, UpdateEventDto updateEventDto, CancellationToken cancellationToken);
         Task<bool> DeleteEventAsync(Guid id, CancellationToken cancellationToken);
-        Task<Event> GetLastEventAsync(CancellationToken cancellationToken);
+        Task<EventResponseDTO> GetLastEventAsync(CancellationToken cancellationToken);
         Task<PaginatedResult> GetFilteredEventsAsync(
             string title = null,
             DateTime? from = null,

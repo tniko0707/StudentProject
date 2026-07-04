@@ -46,7 +46,7 @@ namespace Users.Presentation.Controllers
             try
             {
                 var response = await _userService.RegistrateAsync(registrationRequest);
-                return Created("Зарегистрирован", response);
+                return StatusCode(StatusCodes.Status201Created, response);
             }
             catch (Exception ex)
             {

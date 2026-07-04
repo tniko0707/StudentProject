@@ -18,8 +18,8 @@ var jwtSettings = builder.Configuration.GetSection("JWTSettings").Get<JwtSetting
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection")));
-builder.Services.AddSingleton(jwtSettings);
 
+builder.Services.AddSingleton(jwtSettings);
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtTokenCreator, JwtTokenCreator>();
@@ -47,8 +47,6 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddAuthorization();
-
-
 
 builder.Services.AddControllers();
 

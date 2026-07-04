@@ -80,7 +80,7 @@ namespace Bookings.Application.Services
                     //    cancellationToken);
                     var eventRepository = scope.ServiceProvider.GetRequiredService<IEventRepository>();
                     Event? eventForBook = null;
-                    eventForBook = await eventRepository.FindByIdAsync(pendingBooking.EventId, cancellationToken);
+                    eventForBook = await eventRepository.GetByIdAsync(pendingBooking.EventId, cancellationToken);
 
                     if (eventForBook is null)
                     {

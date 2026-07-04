@@ -7,12 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Confluent.Kafka" Version="2.15.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.15" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Abstractions" Version="9.0.15" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.15">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.15" />
     <PackageReference Include="Npgsql" Version="9.0.4" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
   </ItemGroup>
@@ -20,6 +22,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Events.Application\Events.Application.csproj" />
     <ProjectReference Include="..\Events.Domain\Events.Domain.csproj" />
+    <ProjectReference Include="..\Shared.Contracts\Shared.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

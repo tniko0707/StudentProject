@@ -16,9 +16,4 @@
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.19.1" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Bookings.Domain\Bookings.Domain.csproj" />
-    <ProjectReference Include="..\Events.Application\Events.Application.csproj" />
-  </ItemGroup>
-
 </Project>
