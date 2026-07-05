@@ -11,14 +11,7 @@ namespace Bookings.Infrastructure.Repositories
 
         public BookingRepository(AppDbContext db) { _db = db; }
 
-        public async Task<Booking> AddAsync(Booking booking, CancellationToken ct = default)
-        {
-            _db.Bookings.Add(booking);
-            await SaveChangesAsync(ct);
-            return booking;
-        }
-
-        public async Task<Booking?> FindByIdAsync(Guid id, CancellationToken ct = default)
+        public async Task<Booking?> GetByIdAsync(Guid id, CancellationToken ct = default)
         {
             return await _db.Bookings.FirstOrDefaultAsync(b => b.Id == id);
         }
@@ -31,19 +24,25 @@ namespace Bookings.Infrastructure.Repositories
         {
             return await _db.Bookings.Where(b => b.Status == BookingStatus.Pending).ToListAsync();
         }
+        public async Task<Booking> AddAsync(Booking booking, CancellationToken ct = default)
+        {
+            _db.Bookings.Add(booking);
+            await SaveChangesAsync(ct);
+            return booking;
+        }
+
         public async Task<Booking> GetLastBookingAsync(CancellationToken ct = default)
         {
-            return await _db.Bookings.OrderBy(b => b.CreatedAt).LastAsync();
+            return await _db.Bookings.OrderBy(b => b.CreatedAt).LastAsync(ct);
         }
         public async Task ConfirmBookingAsync(Guid id, CancellationToken ct = default)
         {
-            var b = await FindByIdAsync(id, ct);
+            var b = await GetByIdAsync(id, ct);
             if (b != null)
             {
                 b.Status = BookingStatus.Confirmed;
                 await SaveChangesAsync(ct);
             }
-            ;
         }
         public async Task SaveChangesAsync(CancellationToken ct)
         {
@@ -58,6 +57,11 @@ namespace Bookings.Infrastructure.Repositories
         {
             var bookings = await _db.Bookings.Where(b => b.UserId == userId).ToListAsync(ct);
             return bookings;
+        }
+
+        public async Task UpdateAsync(Booking booking, CancellationToken ct = default)
+        {
+            _db.Bookings.Update(booking);
         }
     }
 }

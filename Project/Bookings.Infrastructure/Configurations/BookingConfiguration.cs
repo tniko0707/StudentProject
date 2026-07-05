@@ -11,6 +11,10 @@ namespace Bookings.Infrastructure.Configurations
             builder.ToTable("bookings");
 
             builder.HasKey(e => e.Id);
+            builder.Property(b => b.EventId).IsRequired();
+            builder.Property(b => b.UserId).IsRequired();
+            builder.Property(b => b.SeatsCount).IsRequired();
+
 
             builder.Property(b => b.Status).IsRequired()
                 .HasConversion(
@@ -19,12 +23,9 @@ namespace Bookings.Infrastructure.Configurations
                 )
                 .HasMaxLength(50);
 
-            builder.Property(b => b.EventId).IsRequired();
             builder.Property(b => b.CreatedAt).IsRequired();
+            builder.Property(b => b.ProcessedAt);
 
-            //builder.HasOne(b => b.Event).WithMany(e => e.Bookings)
-            //    .HasForeignKey(e => e.EventId)
-            //    .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

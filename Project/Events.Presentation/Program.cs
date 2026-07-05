@@ -33,6 +33,8 @@ builder.Services.AddSingleton(new ConsumerConfig
     EnableAutoOffsetStore = false
 });
 
+builder.Services.AddHostedService<BookingConfirmedConsumer>();
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;

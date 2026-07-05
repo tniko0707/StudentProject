@@ -1,19 +1,18 @@
-﻿using Bookings.Application.Repositories;
+﻿using Bookings.Application.DTO;
+using Bookings.Application.Repositories;
 using Bookings.Domain.Models;
-using Events.Application.Repositories;
-using Events.Domain.Models;
-using Users.Domain.Models;
+using Microsoft.Extensions.Logging;
+using Shared.Contracts.Messages;
 namespace Bookings.Application.Services
 {
     public class BookingService : IBookingService
     {
-        private static readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
         private readonly IBookingRepository _bookingRepository;
-        private readonly IEventRepository _eventRepository;
-        public BookingService(IBookingRepository bookingRepository, IEventRepository eventRepository)
+        private readonly IKafkaProducer _kafkaProducer;
+        public BookingService(IBookingRepository bookingRepository, IKafkaProducer kafkaProducer)
         {
             _bookingRepository = bookingRepository;
-            _eventRepository = eventRepository;
+            _kafkaProducer = kafkaProducer;
         }
 
         /// <summary>
@@ -21,68 +20,75 @@ namespace Bookings.Application.Services
         /// </summary>
         /// <param name="eventId"></param>
         /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
-        public async Task<Booking> CreateBookingAsync(User user, Guid eventId, CancellationToken ct)
+        /// <exception cref="NotImplementedException"></exception> 
+        public async Task<BookingResponseDTO> CreateAsync(Guid userId, 
+            CreateBookingDTO createBookingDTO, 
+            CancellationToken ct = default)
         {
-            await _semaphore.WaitAsync(ct);
-            try
-            {
-                var userBookings = await _bookingRepository.GetAllUserBookings(user.UserId, ct);
-                if (userBookings.Where(b =>
-                            b.Status == BookingStatus.Pending
-                            || b.Status == BookingStatus.Confirmed).Count() >= 10)
-                {
-                    throw new BookingLimitException("Превышение событий у пользователя");
-                }
-                Event? eventForBooking = await _eventRepository
-                    .GetByIdAsync(eventId, ct);
-                if (eventForBooking == null)
-                {
-                    throw new KeyNotFoundException($"Событие {eventId} не найдено");
-                }
-                if (eventForBooking.StartAt <= DateTime.UtcNow)
-                {
-                    throw new BookingPastEventException("Событие уже началось");
-                }
+            Booking booking = Booking.CreatePending(userId, createBookingDTO.EventId, createBookingDTO.SeatsCount);
 
-                bool check = eventForBooking.TryReserveSeats();
-                if (!check)
-                {
-                    throw new NoAvailableSeatsException();
-                }
-                Booking booking = Booking.CreatePending(user.UserId, eventId);
-                await _bookingRepository.AddAsync(booking);
-                return booking;
-            }
-            finally { _semaphore.Release(); }
+            booking.Confirm();
+
+            await _bookingRepository.AddAsync(booking, ct);
+
+            var message = new BookingConfirmedEvent()
+            {
+                BookingId = booking.Id,
+                UserId = userId,
+                EventId = createBookingDTO.EventId,
+                SeatsNumber = createBookingDTO.SeatsCount,
+            };
+
+            await _kafkaProducer.PublishBookingConfirmedAsync(message);
+
+            return MapToDTO(booking);
+
         }
+
+        private static BookingResponseDTO MapToDTO(Booking booking)
+        {
+            return new BookingResponseDTO()
+            {
+                Id = booking.Id,
+                UserId = booking.UserId,
+                EventId = booking.EventId,
+                CreatedAt = booking.CreatedAt,
+                ProcessedAt = booking.ProcessedAt,
+                SeatsCount = booking.SeatsCount,
+                Status = booking.Status,
+            };
+        }
+
         /// <summary>
         /// Получение брони по id
         /// </summary>
         /// <param name="bookingId"></param>
         /// <returns></returns>
-        public async Task<Booking?> GetBookingByIdAsync(User user, Guid bookingId, CancellationToken cancellationToken)
+        public async Task<BookingResponseDTO> GetByIdAsync(Guid userId, Guid bookingId, CancellationToken cancellationToken)
         {
             //var booking = await _dbContext.Bookings.FirstOrDefaultAsync(b => b.Id == bookingId, cancellationToken);
-            var booking = await _bookingRepository.FindByIdAsync(bookingId, cancellationToken);
+            var booking = await _bookingRepository.GetByIdAsync(bookingId, cancellationToken);
             if (booking == null)
             {
                 throw new KeyNotFoundException($"Событие {bookingId} не найдено");
             }
-            if (booking.UserId != user.UserId)
+            if (booking.UserId != userId)
             {
                 throw new KeyNotFoundException($"Событие {bookingId} не относится к текущему пользователю");
             }
-            return booking;
+            return MapToDTO(booking);
         }
+
         /// <summary>
         /// Получить все брони
         /// </summary>
         /// <returns></returns>
-        public async Task<List<Booking>> GetAllBookingsAsync(CancellationToken cancellationToken)
+        public async Task<List<BookingResponseDTO>> GetAllBookingsAsync(CancellationToken cancellationToken)
         {
-            return await _bookingRepository.GetAllAsync(cancellationToken);
+            var bookings = await _bookingRepository.GetAllAsync(cancellationToken);
+            return bookings.Select(b => MapToDTO(b)).ToList();
         }
+
         /// <summary>
         /// Подтверждение брони
         /// </summary>
@@ -92,14 +98,17 @@ namespace Bookings.Application.Services
         {
             await _bookingRepository.ConfirmBookingAsync(bookingId, cancellationToken);
         }
+
         /// <summary>
         /// Получение крайней брони
         /// </summary>
         /// <returns></returns>
-        public async Task<Booking> GetLastBookingAsync(CancellationToken cancellationToken)
+        public async Task<BookingResponseDTO> GetLastBookingAsync(CancellationToken cancellationToken)
         {
-            return await _bookingRepository.GetLastBookingAsync(cancellationToken);
+            var booking = await _bookingRepository.GetLastBookingAsync(cancellationToken);
+            return MapToDTO(booking);
         }
+
         /// <summary>
         /// Очистка база броней
         /// </summary>
@@ -110,28 +119,19 @@ namespace Bookings.Application.Services
             return await _bookingRepository.DeleteDataFromTable() > 0;
         }
 
-        public async Task<bool> CancelBooking(User user, Guid bookingId, CancellationToken ct)
+        public async Task<bool> CancelAsync(Guid userId, Guid bookingId, CancellationToken ct)
         {
-            var booking = await _bookingRepository.FindByIdAsync(bookingId);
-            if (booking == null)
+            var booking = await _bookingRepository.GetByIdAsync(bookingId)
+                ?? throw new KeyNotFoundException($"Событие {bookingId} не найдено");
+
+            if (booking.UserId != userId)
             {
-                throw new KeyNotFoundException($"Событие {bookingId} не найдено");
+                throw new UnauthorizedAccessException("Нет прав для отмены");
             }
 
-            bool isUserAdmin = user.Role == Role.Admin;
+            if (!booking.CancelBooking()) return false;
 
-            if (!isUserAdmin && booking.UserId != user.UserId)
-            {
-                throw new NoRightsToChangeException("Нет прав для отмены");
-            }
-
-            if (booking.Event?.StartAt <= DateTime.UtcNow)
-            {
-                throw new BookingPastEventException("Событие уже началось");
-            }
-
-            booking.CancelBooking();
-            await _bookingRepository.SaveChangesAsync(ct);
+            await _bookingRepository.UpdateAsync(booking, ct);
 
             return true;
         }

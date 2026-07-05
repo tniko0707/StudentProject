@@ -1,11 +1,11 @@
-﻿using Bookings.Application.Services;
-using Events.Application.Services;
+﻿using Bookings.Application.DTO;
+using Bookings.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Presentation.Extensions;
+using System.Security.Claims;
 using Users.Application.Services;
 
-namespace Presentation.Controllers
+namespace Bookings.Presentation.Controllers
 {
     /// <summary>
     /// 
@@ -18,15 +18,10 @@ namespace Presentation.Controllers
     {
         private CancellationToken _cancellationToken;
         private readonly IBookingService _bookingService;
-        private readonly IEventService _eventService;
-        private readonly IUserService _userService;
-        public BookingsController(IBookingService bookingService,
-            IEventService eventService, IUserService userService)
+        public BookingsController(IBookingService bookingService)
         {
             _cancellationToken = new CancellationTokenSource().Token;
             _bookingService = bookingService;
-            _eventService = eventService;
-            _userService = userService;
         }
 
         /// <summary>
@@ -35,12 +30,12 @@ namespace Presentation.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("{id}", Name = "GetBooking")]
-        public async Task<IActionResult> Get(Guid id)
+        public async Task<IActionResult> GetById(Guid id)
         {
-            Guid userId = User.GetUserId();
-            var user = await _userService.FindByIdAsync(userId, _cancellationToken);
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+            var userId = Guid.Parse(userIdClaim!);
 
-            var booking = await _bookingService.GetBookingByIdAsync(user, id, _cancellationToken);
+            var booking = await _bookingService.GetByIdAsync(userId, id, _cancellationToken);
 
             if (booking == null) return NotFound();
             return Ok(booking);
@@ -51,32 +46,33 @@ namespace Presentation.Controllers
         /// </summary>
         /// <param name = "eventId" > id события</param>
         /// <returns> Бронь </returns >
-        [HttpPost("{eventId}/book")]
-        public async Task<IActionResult> CreateBookingAsync(Guid eventId)
+        [HttpPost]
+        public async Task<IActionResult> CreateBookingAsync([FromBody] CreateBookingDTO createBookingDTO)
         {
-            Guid userId = User.GetUserId();
-            var user = await _userService.FindByIdAsync(userId, _cancellationToken);
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+            var userId = Guid.Parse(userIdClaim!);
 
-            var eventt = await _eventService.GetEventByIdAsync(eventId, _cancellationToken);
-            if (eventt == null) return NotFound();
+            var booking = await _bookingService.CreateAsync(userId, createBookingDTO, _cancellationToken);
 
-            var booking = await _bookingService.CreateBookingAsync(user, eventId, _cancellationToken);
-
-            return AcceptedAtRoute("GetBooking", new { Id = booking.Id }, booking);
+            return StatusCode(StatusCodes.Status201Created, booking);
         }
 
         [HttpDelete("{bookingId}/cancel")]
         public async Task<IActionResult> CancelBooking(Guid bookingId)
         {
-            Guid userId = User.GetUserId();
-            var user = await _userService.FindByIdAsync(userId, _cancellationToken);
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+            var userId = Guid.Parse(userIdClaim!);
 
-            await _bookingService.CancelBooking(user, bookingId, _cancellationToken);
+            if (!await _bookingService.CancelAsync(userId, bookingId, _cancellationToken))
+            {
+                return NotFound();
+            }
 
             return Ok("Бронь успешно отменена");
         }
 
         [HttpDelete]
+        [Authorize(Roles="Admin")]
         public async Task<IActionResult> DeleteAllBookingsAsync()
         {
             var r = await _bookingService.DeleteAllBookingsAsync(_cancellationToken);

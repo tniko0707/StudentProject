@@ -64,8 +64,12 @@ namespace Events.Infrastructure.Consumers
             IEventRepository repository, 
             CancellationToken stoppingToken)
         {
-            var eventt = await repository.GetByIdAsync(message.EventId)
-                ?? throw new InvalidOperationException("Такое событие отсутствует");
+            var eventt = await repository.GetByIdAsync(message.EventId);
+            if (eventt == null)
+            {
+                _logger.LogError($"Событие: {message.EventId} отсутствует");
+                return;
+            }
 
             eventt.TryReserveSeats(message.SeatsNumber);
 

@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Shared.Contracts.Messages;
 
 namespace Bookings.Application.Services
 {
-    internal class IKafkaProducer
+    public interface IKafkaProducer
     {
+        Task PublishBookingConfirmedAsync(BookingConfirmedEvent message, CancellationToken ct = default);
     }
 }

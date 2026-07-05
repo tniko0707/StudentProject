@@ -1,20 +1,15 @@
-﻿using Bookings.Domain.Models;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Bookings.Application.DTO
 {
     public class CreateBookingDTO
     {
-        [Required]
-        public Guid UserId { get; set; }
 
         [Required]
-        public Guid EventId { get; }
+        public Guid EventId { get; set; }
 
         [Required]
-        public BookingStatus Status { get; set; }
-
-        [Required]
-        public DateTime CreatedAt { get; }
+        [Range(1, 10, ErrorMessage = "Число мест должно быть больше 1")]
+        public int SeatsCount { get; set; }
     }
 }
