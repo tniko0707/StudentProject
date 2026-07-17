@@ -40,6 +40,7 @@ namespace Events.Presentation.Controllers
 
             return Ok(events);
         }
+
         /// <summary>
         /// Получение события по id
         /// </summary>
@@ -52,6 +53,18 @@ namespace Events.Presentation.Controllers
             if (evente == null) return NotFound();
             return Ok(evente);
         }
+
+        /// <summary>
+        /// Получение ТОП 10 популярных событий
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("top")]
+        public async Task<IActionResult> GetTop10()
+        {
+            var events = await _eventService.GetTop10EventsAsync(cancellationToken);
+            return Ok(events);
+        }
+
         /// <summary>
         /// Создание события
         /// </summary>

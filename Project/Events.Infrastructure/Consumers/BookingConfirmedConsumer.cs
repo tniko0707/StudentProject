@@ -13,12 +13,17 @@ namespace Events.Infrastructure.Consumers
     {
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<BookingConfirmedConsumer> _logger;
+        private readonly IEventCacheRepository _eventCacheRepository;
         private readonly ConsumerConfig _consumerConfig;
 
-        public BookingConfirmedConsumer(IServiceScopeFactory scopeFactory, ILogger<BookingConfirmedConsumer> logger, ConsumerConfig consumerConfig)
+        public BookingConfirmedConsumer(IServiceScopeFactory scopeFactory, 
+            ILogger<BookingConfirmedConsumer> logger, 
+            IEventCacheRepository eventCacheRepository,
+            ConsumerConfig consumerConfig)
         {
             _scopeFactory = scopeFactory;
             _logger = logger;
+            _eventCacheRepository = eventCacheRepository;
             _consumerConfig = consumerConfig;
         }
 
@@ -74,6 +79,8 @@ namespace Events.Infrastructure.Consumers
             eventt.TryReserveSeats(message.SeatsNumber);
 
             await repository.UpdateAsync(eventt);
+
+            await _eventCacheRepository.DeleteKey(message.EventId);
 
             _logger.LogInformation($"Событие: {eventt.Id}, Заброниро: {message.SeatsNumber}, Доступно: {eventt.AvailableSeats}");
         }

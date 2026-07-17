@@ -10,9 +10,11 @@ namespace Events.Application.Services
     public class EventService : IEventService
     {
         private readonly IEventRepository _eventRepository;
-        public EventService(IEventRepository eventRepository)
+        private readonly IEventCacheRepository _eventCacheRepository;
+        public EventService(IEventRepository eventRepository, IEventCacheRepository eventCacheRepository)
         {
             _eventRepository = eventRepository;
+            _eventCacheRepository = eventCacheRepository;
         }
         /// <summary>
         /// Создать событие
@@ -78,7 +80,7 @@ namespace Events.Application.Services
         /// <returns></returns>
         public async Task<EventResponseDTO> GetEventByIdAsync(Guid id, CancellationToken cancellationToken)
         {
-            Event? eventForBooking = await _eventRepository.GetByIdAsync(id, cancellationToken);
+            Event? eventForBooking = await _eventCacheRepository.GetEventByIdAsync(id, cancellationToken);
             //var eventForBooking = await _dbContext.Events.FirstOrDefaultAsync(e => e.Id == id, cancellationToken) as Event;
             if (eventForBooking is null)
             {
@@ -86,8 +88,14 @@ namespace Events.Application.Services
             }
             return MapToDto(eventForBooking);
             //return events.First(e => e.Id == id) as Event;//заглушка для теста
-
         }
+
+        public async Task<IEnumerable<EventResponseDTO>> GetTop10EventsAsync(CancellationToken cancellationToken)
+        {
+            var events = await _eventCacheRepository.GetTop10Events(cancellationToken);
+            return events.Select(e => MapToDto(e));
+        }
+
         /// <summary>
         /// Обновить событие
         /// </summary>
@@ -117,6 +125,7 @@ namespace Events.Application.Services
  
             //await _dbContext.SaveChangesAsync(cancellationToken);
             await _eventRepository.SaveChangesAsync(cancellationToken);
+            await _eventCacheRepository.DeleteKey(id);
             return MapToDto(eventToUpdate);
         }
         /// <summary>
