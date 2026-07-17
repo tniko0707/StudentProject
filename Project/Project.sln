@@ -44,6 +44,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Элементы решен
 		docker-compose.yml = docker-compose.yml
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{B5FFFCFE-C07A-4BE7-B6C7-6B26A929365C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Events.Tests", "Events.Tests", "{85846616-6FDF-432A-AC00-07B884EB4006}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventServiceTests", "EventServiceTests\EventServiceTests.csproj", "{3FC8C4D5-E5C6-43EE-A684-B187BAF512AE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -102,6 +108,10 @@ Global
 		{87E914EE-11E7-4A4F-B935-14363BB7296F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{87E914EE-11E7-4A4F-B935-14363BB7296F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{87E914EE-11E7-4A4F-B935-14363BB7296F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3FC8C4D5-E5C6-43EE-A684-B187BAF512AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3FC8C4D5-E5C6-43EE-A684-B187BAF512AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3FC8C4D5-E5C6-43EE-A684-B187BAF512AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3FC8C4D5-E5C6-43EE-A684-B187BAF512AE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -123,6 +133,8 @@ Global
 		{7D56DE6D-5BE8-4294-B061-5831558BC97B} = {C326A1B2-3D9C-442B-A374-4992873FADFC}
 		{B284400D-D707-46F4-BA77-17851B874516} = {5D4CAF0D-A2C9-4379-B6B0-591F52933032}
 		{87E914EE-11E7-4A4F-B935-14363BB7296F} = {EE922075-E3A4-4F9F-BD9D-4A1F17C68B01}
+		{85846616-6FDF-432A-AC00-07B884EB4006} = {B5FFFCFE-C07A-4BE7-B6C7-6B26A929365C}
+		{3FC8C4D5-E5C6-43EE-A684-B187BAF512AE} = {85846616-6FDF-432A-AC00-07B884EB4006}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {037684DA-3CF2-4460-A05F-EDB4C4D1CCD1}
