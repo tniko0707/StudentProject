@@ -2,22 +2,37 @@
 using Events.Application.Repositories;
 using Events.Application.Services;
 using Events.Domain.Models;
+using Events.Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.Extensions.Logging;
 using Moq;
+using StackExchange.Redis;
+using System.Threading;
 
 namespace EventsServices.Tests
 {
     public class EventsServicesTests
     {
+        private readonly Mock<IDatabase> _redisDB;
         private readonly Mock<IEventRepository> _eventRepository;
-        private readonly Mock<IEventCacheRepository> _eventCacheRepository;
+        private readonly Mock<IEventCacheRepository> _eventCacheRepositoryMock;
+        private readonly EventCacheRepository _eventCacheRepository;
         private readonly EventService _eventService;
 
 
         public EventsServicesTests()
         {
-            _eventCacheRepository = new Mock<IEventCacheRepository>();
             _eventRepository = new Mock<IEventRepository>();
-            _eventService = new EventService(_eventRepository.Object, _eventCacheRepository.Object);
+            _eventCacheRepositoryMock = new Mock<IEventCacheRepository>();
+            _eventService = new EventService(_eventRepository.Object, _eventCacheRepositoryMock.Object);
+
+            var loggerMock = new Mock<ILogger<EventCacheRepository>>();
+            _redisDB = new Mock<IDatabase>();
+            // Создаем НАСТОЯЩИЙ объект EventCacheRepository, передавая ему наши моки
+            _eventCacheRepository = new EventCacheRepository(
+                _redisDB.Object,
+                _eventRepository.Object,
+                loggerMock.Object);
         }
 
         /// <summary>
@@ -35,7 +50,7 @@ namespace EventsServices.Tests
                 20);
             var ct = new CancellationToken();
 
-            _eventCacheRepository.Setup(c => c.GetEventByIdAsync(cachedEvent.Id, ct))
+            _eventCacheRepositoryMock.Setup(c => c.GetEventByIdAsync(cachedEvent.Id, ct))
                 .ReturnsAsync(cachedEvent);
 
             // Act 
@@ -51,6 +66,8 @@ namespace EventsServices.Tests
         /// </summary>
         /// <returns></returns>
         [Fact]
+
+
         public async Task GetEventById_UseRepository()
         {
             // Arrange
@@ -59,18 +76,31 @@ namespace EventsServices.Tests
                 DateTime.UtcNow.AddDays(1),
                 DateTime.UtcNow.AddDays(2),
                 20);
+            var key = $"event:{cachedEvent.Id}";
+
             var ct = new CancellationToken();
 
-            _eventCacheRepository.Setup(c => c.GetEventByIdAsync(cachedEvent.Id, ct))
+            _redisDB
+                .Setup(db => db.StringGetAsync(It.Is<RedisKey>(k => k == key), It.IsAny<CommandFlags>()))
+                .ReturnsAsync(RedisValue.Null);
+
+            _eventRepository
+                .Setup(repo => repo.GetByIdAsync(cachedEvent.Id, ct))
                 .ReturnsAsync(cachedEvent);
 
             // Act 
-            var result = await _eventService.GetEventByIdAsync(cachedEvent.Id, ct);
+            var result = await _eventCacheRepository.GetEventByIdAsync(cachedEvent.Id, ct);
 
             // Assert
-            _eventCacheRepository.Verify(r => r.GetEventByIdAsync(cachedEvent.Id, ct), Times.Once());
+            _eventRepository.Verify(
+                repo => repo.GetByIdAsync(cachedEvent.Id, ct),
+                Times.Once);
+
+            var setInvocation = _redisDB.Invocations
+                .FirstOrDefault(i => i.Method.Name == "StringSetAsync");
         }
 
+        
         [Fact]
         public async Task UpdateEvent_DeleteKache()
         {
@@ -94,7 +124,7 @@ namespace EventsServices.Tests
             var result = await _eventService.UpdateEventAsync(cachedEvent.Id, updateEventDto, ct);
 
             // Assert
-            _eventCacheRepository.Verify(r => r.DeleteKey(cachedEvent.Id), Times.Once());
+            _eventCacheRepositoryMock.Verify(r => r.DeleteKey(cachedEvent.Id), Times.Once());
 
         }
     }

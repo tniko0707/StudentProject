@@ -57,6 +57,8 @@ namespace Events.Application.Services
                 ?? throw new KeyNotFoundException($"Событие {id} не найдено");
             
             await _eventRepository.DeleteAsync(@event, cancellationToken);
+            await _eventCacheRepository.DeleteKey(id);
+
             //_dbContext.Events.Remove(@event);
             //await _dbContext.SaveChangesAsync(cancellationToken);
             return true;

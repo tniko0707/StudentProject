@@ -45,6 +45,8 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(
     AbortOnConnectFail = false,
     ConnectRetry = 3,
 }));
+builder.Services.AddSingleton(sp => sp.GetRequiredService<IConnectionMultiplexer>().GetDatabase());
+
 
 builder.Services.AddHostedService<BookingConfirmedConsumer>();
 
