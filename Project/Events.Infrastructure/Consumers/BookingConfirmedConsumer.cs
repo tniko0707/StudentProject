@@ -1,5 +1,6 @@
 ﻿using Confluent.Kafka;
 using Events.Application.Repositories;
+using Events.Infrastructure.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -13,17 +14,14 @@ namespace Events.Infrastructure.Consumers
     {
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<BookingConfirmedConsumer> _logger;
-        private readonly IEventCacheRepository _eventCacheRepository;
         private readonly ConsumerConfig _consumerConfig;
 
         public BookingConfirmedConsumer(IServiceScopeFactory scopeFactory, 
             ILogger<BookingConfirmedConsumer> logger, 
-            IEventCacheRepository eventCacheRepository,
             ConsumerConfig consumerConfig)
         {
             _scopeFactory = scopeFactory;
             _logger = logger;
-            _eventCacheRepository = eventCacheRepository;
             _consumerConfig = consumerConfig;
         }
 
@@ -55,6 +53,10 @@ namespace Events.Infrastructure.Consumers
                     var repository = scope.ServiceProvider.GetRequiredService<IEventRepository>();
 
                     HandleAsync(message, repository, stoppingToken).GetAwaiter().GetResult();
+                    
+                    var eventCacheRepository = scope.ServiceProvider.GetRequiredService<IEventCacheRepository>();
+                    DeleteKey(eventCacheRepository, message).GetAwaiter().GetResult();
+
                 }
             }
             catch (Exception ex)
@@ -63,6 +65,11 @@ namespace Events.Infrastructure.Consumers
             }
 
             consumer.Close();
+        }
+        private async Task DeleteKey(IEventCacheRepository eventCacheRepository,
+            BookingConfirmedEvent? message)
+        {
+            await eventCacheRepository.DeleteKey(message.EventId);
         }
 
         private async Task HandleAsync(BookingConfirmedEvent? message, 
@@ -80,7 +87,6 @@ namespace Events.Infrastructure.Consumers
 
             await repository.UpdateAsync(eventt);
 
-            await _eventCacheRepository.DeleteKey(message.EventId);
 
             _logger.LogInformation($"Событие: {eventt.Id}, Заброниро: {message.SeatsNumber}, Доступно: {eventt.AvailableSeats}");
         }

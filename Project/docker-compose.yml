@@ -43,7 +43,7 @@ services:
     container_name: eventapi-redis
     restart: unless-stopped
     ports:
-      - "6379:6379" # Открыли порт наружу, если захочешь подключиться через RedisInsight / CLI
+      - "6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -143,6 +143,8 @@ services:
       JWTSettings__ExpirationHours: 1
       Kafka__BootstrapServers: kafka:29092
       Kafka__GroupId: order-processing
+      Redis__Host: redis
+      Redis__Port: 6379
     ports:
       - "5002:8080"
 

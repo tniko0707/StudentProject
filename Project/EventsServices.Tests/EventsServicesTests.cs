@@ -48,10 +48,11 @@ namespace EventsServices.Tests
                 DateTime.UtcNow.AddDays(1),
                 DateTime.UtcNow.AddDays(2),
                 20);
+            var dto = EventResponseDTO.MapToDto(cachedEvent);
             var ct = new CancellationToken();
 
             _eventCacheRepositoryMock.Setup(c => c.GetEventByIdAsync(cachedEvent.Id, ct))
-                .ReturnsAsync(cachedEvent);
+                .ReturnsAsync(dto);
 
             // Act 
             var result = await _eventService.GetEventByIdAsync(cachedEvent.Id, ct);
@@ -98,9 +99,14 @@ namespace EventsServices.Tests
 
             var setInvocation = _redisDB.Invocations
                 .FirstOrDefault(i => i.Method.Name == "StringSetAsync");
+
+            Assert.NotNull(setInvocation);
+            Assert.Equal((RedisKey)key, (RedisKey)setInvocation.Arguments[0]);
+            var value = (RedisValue)setInvocation.Arguments[1];
+            Assert.True(value.HasValue && !value.IsNullOrEmpty);
+
         }
 
-        
         [Fact]
         public async Task UpdateEvent_DeleteKache()
         {

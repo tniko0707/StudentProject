@@ -35,11 +35,13 @@ builder.Services.AddSingleton(new ConsumerConfig
     EnableAutoOffsetStore = false
 });
 
+var redisHost = builder.Configuration["Redis:Host"] ?? "localhost";
+var redisPort = builder.Configuration["Redis:Port"] ?? "6379";
 builder.Services.AddSingleton<IConnectionMultiplexer>(
     await ConnectionMultiplexer.ConnectAsync(new ConfigurationOptions
 {
-    EndPoints = { $"{builder.Configuration["Redis:Host"]}:{builder.Configuration["Redis:Port"]}" },
-    Password = builder.Configuration["Redis:REDIS_PASSWORD"],
+    EndPoints = { $"{redisHost}:{redisPort}" },
+    //Password = builder.Configuration["Redis:REDIS_PASSWORD"],
     ConnectTimeout = 5000,
     SyncTimeout = 3000,
     AbortOnConnectFail = false,
