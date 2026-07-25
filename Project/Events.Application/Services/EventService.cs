@@ -10,9 +10,11 @@ namespace Events.Application.Services
     public class EventService : IEventService
     {
         private readonly IEventRepository _eventRepository;
-        public EventService(IEventRepository eventRepository)
+        private readonly IEventCacheRepository _eventCacheRepository;
+        public EventService(IEventRepository eventRepository, IEventCacheRepository eventCacheRepository)
         {
             _eventRepository = eventRepository;
+            _eventCacheRepository = eventCacheRepository;
         }
         /// <summary>
         /// Создать событие
@@ -42,7 +44,7 @@ namespace Events.Application.Services
             await _eventRepository.AddAsync(evente, cancellationToken);
             //await _dbContext.Events.AddAsync(evente, cancellationToken);
             //await _dbContext.SaveChangesAsync(cancellationToken);
-            return MapToDto(evente);
+            return EventResponseDTO.MapToDto(evente);
         }
         /// <summary>
         /// Удаление события по id
@@ -55,6 +57,8 @@ namespace Events.Application.Services
                 ?? throw new KeyNotFoundException($"Событие {id} не найдено");
             
             await _eventRepository.DeleteAsync(@event, cancellationToken);
+            await _eventCacheRepository.DeleteKey(id);
+
             //_dbContext.Events.Remove(@event);
             //await _dbContext.SaveChangesAsync(cancellationToken);
             return true;
@@ -68,7 +72,7 @@ namespace Events.Application.Services
         {
             var events = await _eventRepository.GetAllAsync(cancellationToken);
             
-            return events.Select(e => MapToDto(e));
+            return events.Select(e => EventResponseDTO.MapToDto(e));
             //return await _dbContext.Events.ToListAsync(cancellationToken);
         }
         /// <summary>
@@ -78,16 +82,22 @@ namespace Events.Application.Services
         /// <returns></returns>
         public async Task<EventResponseDTO> GetEventByIdAsync(Guid id, CancellationToken cancellationToken)
         {
-            Event? eventForBooking = await _eventRepository.GetByIdAsync(id, cancellationToken);
+            EventResponseDTO? eventForBooking = await _eventCacheRepository.GetEventByIdAsync(id, cancellationToken);
             //var eventForBooking = await _dbContext.Events.FirstOrDefaultAsync(e => e.Id == id, cancellationToken) as Event;
             if (eventForBooking is null)
             {
                 throw new KeyNotFoundException($"Событие {id} не найдено");
             }
-            return MapToDto(eventForBooking);
+            return eventForBooking;
             //return events.First(e => e.Id == id) as Event;//заглушка для теста
-
         }
+
+        public async Task<IEnumerable<EventResponseDTO>> GetTop10EventsAsync(CancellationToken cancellationToken)
+        {
+            var events = await _eventCacheRepository.GetTop10Events(cancellationToken);
+            return events;
+        }
+
         /// <summary>
         /// Обновить событие
         /// </summary>
@@ -117,7 +127,8 @@ namespace Events.Application.Services
  
             //await _dbContext.SaveChangesAsync(cancellationToken);
             await _eventRepository.SaveChangesAsync(cancellationToken);
-            return MapToDto(eventToUpdate);
+            await _eventCacheRepository.DeleteKey(id);
+            return EventResponseDTO.MapToDto(eventToUpdate);
         }
         /// <summary>
         /// Получить последнее событие
@@ -129,7 +140,7 @@ namespace Events.Application.Services
             var @event = await _eventRepository.GetLastAsync(cancellationToken)
                 ?? throw new KeyNotFoundException("База еще пустая");
 
-            return MapToDto(@event);
+            return EventResponseDTO.MapToDto(@event);
         }
 
         /// <summary>
@@ -175,18 +186,6 @@ namespace Events.Application.Services
             return new PaginatedResult(totalEvents, await query.ToListAsync(cancellationToken), page, pageSize, totalPages);
         }
 
-        private static EventResponseDTO MapToDto(Event @event)
-        {
-            return new EventResponseDTO()
-            {
-                Id = @event.Id,
-                Title = @event.Title,
-                Description = @event.Description,
-                StartAt = @event.StartAt,
-                EndAt = @event.EndAt,
-                TotalSeats = @event.TotalSeats,
-                AvailableSeats = @event.AvailableSeats,
-            };
-        }
+
     }
 }

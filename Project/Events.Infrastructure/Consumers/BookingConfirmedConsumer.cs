@@ -1,5 +1,6 @@
 ﻿using Confluent.Kafka;
 using Events.Application.Repositories;
+using Events.Infrastructure.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -15,7 +16,9 @@ namespace Events.Infrastructure.Consumers
         private readonly ILogger<BookingConfirmedConsumer> _logger;
         private readonly ConsumerConfig _consumerConfig;
 
-        public BookingConfirmedConsumer(IServiceScopeFactory scopeFactory, ILogger<BookingConfirmedConsumer> logger, ConsumerConfig consumerConfig)
+        public BookingConfirmedConsumer(IServiceScopeFactory scopeFactory, 
+            ILogger<BookingConfirmedConsumer> logger, 
+            ConsumerConfig consumerConfig)
         {
             _scopeFactory = scopeFactory;
             _logger = logger;
@@ -50,6 +53,10 @@ namespace Events.Infrastructure.Consumers
                     var repository = scope.ServiceProvider.GetRequiredService<IEventRepository>();
 
                     HandleAsync(message, repository, stoppingToken).GetAwaiter().GetResult();
+                    
+                    var eventCacheRepository = scope.ServiceProvider.GetRequiredService<IEventCacheRepository>();
+                    DeleteKey(eventCacheRepository, message).GetAwaiter().GetResult();
+
                 }
             }
             catch (Exception ex)
@@ -58,6 +65,11 @@ namespace Events.Infrastructure.Consumers
             }
 
             consumer.Close();
+        }
+        private async Task DeleteKey(IEventCacheRepository eventCacheRepository,
+            BookingConfirmedEvent? message)
+        {
+            await eventCacheRepository.DeleteKey(message.EventId);
         }
 
         private async Task HandleAsync(BookingConfirmedEvent? message, 
@@ -74,6 +86,7 @@ namespace Events.Infrastructure.Consumers
             eventt.TryReserveSeats(message.SeatsNumber);
 
             await repository.UpdateAsync(eventt);
+
 
             _logger.LogInformation($"Событие: {eventt.Id}, Заброниро: {message.SeatsNumber}, Доступно: {eventt.AvailableSeats}");
         }

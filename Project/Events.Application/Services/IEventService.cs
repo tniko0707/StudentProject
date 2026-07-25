@@ -8,6 +8,7 @@ namespace Events.Application.Services
     {
         Task<IEnumerable<EventResponseDTO>> GetAllAsync(CancellationToken cancellationToken);
         Task<EventResponseDTO?> GetEventByIdAsync(Guid id, CancellationToken cancellationToken);
+        Task<IEnumerable<EventResponseDTO>> GetTop10EventsAsync (CancellationToken cancellationToken);
         Task<EventResponseDTO> CreateEventAsync(CreateEventDto createEventDto, CancellationToken cancellationToken);
         Task<EventResponseDTO?> UpdateEventAsync(Guid id, UpdateEventDto updateEventDto, CancellationToken cancellationToken);
         Task<bool> DeleteEventAsync(Guid id, CancellationToken cancellationToken);

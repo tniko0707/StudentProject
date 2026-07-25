@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using StackExchange.Redis;
 using System.Text;
 using Users.Application.Services;
 
@@ -23,6 +24,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddSingleton(jwtSettings);
 builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<IEventRepository, EventRepository>();
+builder.Services.AddScoped<IEventCacheRepository, EventCacheRepository>();
 
 builder.Services.AddSingleton(new ConsumerConfig
 {
@@ -32,6 +34,21 @@ builder.Services.AddSingleton(new ConsumerConfig
     EnableAutoCommit = false,
     EnableAutoOffsetStore = false
 });
+
+var redisHost = builder.Configuration["Redis:Host"] ?? "localhost";
+var redisPort = builder.Configuration["Redis:Port"] ?? "6379";
+builder.Services.AddSingleton<IConnectionMultiplexer>(
+    await ConnectionMultiplexer.ConnectAsync(new ConfigurationOptions
+{
+    EndPoints = { $"{redisHost}:{redisPort}" },
+    //Password = builder.Configuration["Redis:REDIS_PASSWORD"],
+    ConnectTimeout = 5000,
+    SyncTimeout = 3000,
+    AbortOnConnectFail = false,
+    ConnectRetry = 3,
+}));
+builder.Services.AddSingleton(sp => sp.GetRequiredService<IConnectionMultiplexer>().GetDatabase());
+
 
 builder.Services.AddHostedService<BookingConfirmedConsumer>();
 

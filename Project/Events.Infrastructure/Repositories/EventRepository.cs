@@ -22,11 +22,18 @@ namespace Events.Infrastructure.Repositories
         {
             _db.Events.Update(updatedEvente);
             await SaveChangesAsync(ct);
+
         }
         public async Task<Event?> GetByIdAsync(Guid id, CancellationToken ct = default)
         {
             return await _db.Events.FirstOrDefaultAsync(e => e.Id == id, ct);
         }
+        public async Task<List<Event>> GetTop10Async(CancellationToken ct = default)
+        {
+            return await _db.Events.OrderByDescending(e => e.CalculateSalesPercent())
+                .Take(10).ToListAsync(ct);
+        }
+
         public async Task DeleteAsync(Event evente, CancellationToken ct = default)
         {
             _db.Events.Remove(evente);

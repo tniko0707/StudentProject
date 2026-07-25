@@ -26,7 +26,10 @@
         public DateTime? EndAt { get; private set; }
         public int TotalSeats { get; private set; }
         public int AvailableSeats { get; private set; }
-
+        public double CalculateSalesPercent()
+        {
+            return Math.Round((double)(TotalSeats - AvailableSeats)/TotalSeats, 2);
+        }
         public void Update(string title,
             string? description,
             DateTime? startAt,

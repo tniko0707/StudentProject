@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Events.Domain.Models;
 
 namespace Events.Application.DTO
 {
@@ -15,5 +11,20 @@ namespace Events.Application.DTO
         public DateTime? EndAt { get; set; }
         public int TotalSeats { get; set; }
         public int AvailableSeats { get; set; }
+
+        public static EventResponseDTO MapToDto(Event @event)
+        {
+            return new EventResponseDTO()
+            {
+                Id = @event.Id,
+                Title = @event.Title,
+                Description = @event.Description,
+                StartAt = @event.StartAt,
+                EndAt = @event.EndAt,
+                TotalSeats = @event.TotalSeats,
+                AvailableSeats = @event.AvailableSeats,
+            };
+        }
     }
+
 }

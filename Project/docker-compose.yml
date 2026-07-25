@@ -37,6 +37,18 @@ services:
       interval: 10s
       timeout: 10s
       retries: 15
+  
+  redis:
+    image: redis:7.2-alpine
+    container_name: eventapi-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   users-db:
     image: postgres:16-alpine
@@ -131,6 +143,8 @@ services:
       JWTSettings__ExpirationHours: 1
       Kafka__BootstrapServers: kafka:29092
       Kafka__GroupId: order-processing
+      Redis__Host: redis
+      Redis__Port: 6379
     ports:
       - "5002:8080"
 
