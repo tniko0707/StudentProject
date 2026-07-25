@@ -8,6 +8,11 @@ using Users.Application.Services;
 using Users.Infrastructure.DataAccess;
 using Users.Infrastructure.Services;
 using Users.Infrastructure.Repositories;
+using OpenTelemetry.Trace;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using Serilog;
+using Serilog.Formatting.Compact;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,6 +23,24 @@ var jwtSettings = builder.Configuration.GetSection("JWTSettings").Get<JwtSetting
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection")));
+
+
+builder.Services.AddOpenTelemetry()
+    .WithTracing(tracing => tracing
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation()
+        .AddEntityFrameworkCoreInstrumentation()
+        .AddOtlpExporter(o => o.Endpoint = new Uri(builder.Configuration["Otlp:Endpoint"])))
+    .WithMetrics(metrics => metrics
+        .AddAspNetCoreInstrumentation()
+        .AddRuntimeInstrumentation()
+        .AddPrometheusExporter())
+    .ConfigureResource(r => r.AddService(serviceName: "users-api"));
+
+
+builder.Host.UseSerilog((ctx, cfg) =>
+    cfg.ReadFrom.Configuration(ctx.Configuration)
+    .WriteTo.Console(new CompactJsonFormatter()));
 
 builder.Services.AddSingleton(jwtSettings);
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -103,5 +126,7 @@ if (app.Environment.IsDevelopment())
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+app.MapPrometheusScrapingEndpoint().AllowAnonymous();
 
 app.Run();

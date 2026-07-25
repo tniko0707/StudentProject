@@ -42,11 +42,16 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Элементы решения", "Элементы решения", "{754FC069-D67B-A9D7-50A1-8D1CA196D8F1}"
 	ProjectSection(SolutionItems) = preProject
 		docker-compose.yml = docker-compose.yml
+		Dashboard.json = Dashboard.json
+		prometheus.yml = prometheus.yml
+	EndProjectSection
+	ProjectSection(FolderGlobals) = preProject
+		C_5_4Users_4admin_4source_4repos_4StudentProject_4Project_4Daschboard_1json__JsonSchema = js
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{B5FFFCFE-C07A-4BE7-B6C7-6B26A929365C}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Events.Tests", "Events.Tests", "{85846616-6FDF-432A-AC00-07B884EB4006}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Events", "Events", "{85846616-6FDF-432A-AC00-07B884EB4006}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventsServices.Tests", "EventsServices.Tests\EventsServices.Tests.csproj", "{F5D29A73-DFC8-40BC-A7F6-2BCD7611CBCB}"
 EndProject

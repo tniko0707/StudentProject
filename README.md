@@ -192,3 +192,62 @@ Swagger автоматически добавит заголовок Authorizati
 | `Admin` | Передаётся явно при регистрации (`"role": "Admin"`) | Полный доступ: управление событиями и любыми бронями   |
 
 ---
+
+## Мониторинг
+
+### Инструменты
+
+| Инструмент | Назначение | URL | Порт |
+|---|---|---|---|
+| **Prometheus** | Сбор и хранение метрик | http://localhost:9090 | 9090 |
+| **Grafana** | Визуализация метрик, дашборды | http://localhost:3000 | 3000 |
+| **Jaeger** | Распределённая трассировка запросов | http://localhost:16686 | 16686 |
+
+---
+
+### Что собирается
+
+Каждый из трёх сервисов (`users-api`, `events-api`, `bookings-api`) экспортирует метрики
+через библиотеку **OpenTelemetry** и отдаёт их по эндпоинту `/metrics`.
+
+| Метрика | Описание |
+|---|---|
+| `http_server_request_duration_seconds` | Latency HTTP-запросов (histogram) |
+| `http_server_active_requests` | Число активных запросов в данный момент |
+| Runtime-метрики .NET | GC, threadpool, память |
+
+---
+
+### Как открыть
+
+#### Prometheus
+Откройте http://localhost:9090
+Убедитесь, что таргеты зелёные: http://localhost:9090/targets
+Должны быть UP: events-api, users-api, bookings-api.
+Пример запроса в Graph:
+rate(http_server_request_duration_seconds_count[1m])
+
+#### Grafana
+Откройте http://localhost:3000
+Логин: admin / Пароль: admin
+Перейдите в Dashboards → EventAPI Overview.
+Дашборд содержит панели:
+Latency — перцентили по каждому сервису.
+Throughput — RPS по каждому сервису.
+Error Rate — динамика ошибок 5xx.
+
+#### Jaeger
+Откройте http://localhost:16686
+В поле "Service" выберите нужный сервис:
+users-api
+events-api
+bookings-api
+Нажмите "Find Traces".
+Кликните на любой трейс и увидите цепочку вызовов с временем каждой операции (HTTP → БД → Kafka → Redis).
+
+### Как запустить мониторинг
+
+Все инструменты поднимаются автоматически вместе с проектом:
+
+```bash
+docker-compose up -d
