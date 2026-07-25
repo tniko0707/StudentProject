@@ -18,9 +18,144 @@
 	"editable": true,
 	"fiscalYearStartMonth": 0,
 	"graphTooltip": 0,
-	"id": 1,
+	"id": 2,
 	"links": [],
 	"panels": [
+		{
+			"datasource": {
+				"type": "prometheus",
+				"uid": "fft5tsgb171fkf"
+			},
+			"description": "",
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"axisBorderShow": false,
+						"axisCenteredZero": false,
+						"axisColorMode": "text",
+						"axisLabel": "",
+						"axisPlacement": "auto",
+						"barAlignment": 0,
+						"drawStyle": "line",
+						"fillOpacity": 0,
+						"gradientMode": "none",
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						},
+						"insertNulls": false,
+						"lineInterpolation": "linear",
+						"lineWidth": 1,
+						"pointSize": 5,
+						"scaleDistribution": {
+							"type": "linear"
+						},
+						"showPoints": "auto",
+						"spanNulls": false,
+						"stacking": {
+							"group": "A",
+							"mode": "none"
+						},
+						"thresholdsStyle": {
+							"mode": "off"
+						}
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					},
+					"unit": "s"
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 0,
+				"y": 0
+			},
+			"id": 1,
+			"options": {
+				"legend": {
+					"calcs": [],
+					"displayMode": "list",
+					"placement": "bottom",
+					"showLegend": true
+				},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"targets": [
+				{
+					"datasource": {
+						"type": "prometheus",
+						"uid": "fft5tsgb171fkf"
+					},
+					"disableTextWrap": false,
+					"editorMode": "builder",
+					"expr": "histogram_quantile(0.95, sum by(le, job) (rate(http_server_request_duration_seconds_bucket[1m])))",
+					"fullMetaSearch": false,
+					"includeNullMetadata": true,
+					"instant": false,
+					"legendFormat": "__auto",
+					"range": true,
+					"refId": "A",
+					"useBackend": false
+				},
+				{
+					"datasource": {
+						"type": "prometheus",
+						"uid": "fft5tsgb171fkf"
+					},
+					"disableTextWrap": false,
+					"editorMode": "builder",
+					"expr": "histogram_quantile(0.5, sum by(le, job) (rate(http_server_request_duration_seconds_bucket[1m])))",
+					"fullMetaSearch": false,
+					"hide": false,
+					"includeNullMetadata": true,
+					"instant": false,
+					"legendFormat": "__auto",
+					"range": true,
+					"refId": "B",
+					"useBackend": false
+				},
+				{
+					"datasource": {
+						"type": "prometheus",
+						"uid": "fft5tsgb171fkf"
+					},
+					"disableTextWrap": false,
+					"editorMode": "builder",
+					"expr": "histogram_quantile(0.99, sum by(le, job) (rate(http_server_request_duration_seconds_bucket[1m])))",
+					"fullMetaSearch": false,
+					"hide": false,
+					"includeNullMetadata": true,
+					"instant": false,
+					"legendFormat": "__auto",
+					"range": true,
+					"refId": "C",
+					"useBackend": false
+				}
+			],
+			"title": "Latency",
+			"type": "timeseries"
+		},
 		{
 			"datasource": {
 				"type": "prometheus",
@@ -76,7 +211,8 @@
 								"value": 80
 							}
 						]
-					}
+					},
+					"unit": "reqps"
 				},
 				"overrides": []
 			},
@@ -84,9 +220,9 @@
 				"h": 8,
 				"w": 12,
 				"x": 0,
-				"y": 0
+				"y": 8
 			},
-			"id": 1,
+			"id": 2,
 			"options": {
 				"legend": {
 					"calcs": [],
@@ -107,63 +243,134 @@
 					},
 					"disableTextWrap": false,
 					"editorMode": "builder",
-					"expr": "http_server_request_duration_seconds_count",
+					"expr": "sum by(job) (rate(http_server_request_duration_seconds_count[1m]))",
 					"fullMetaSearch": false,
-					"hide": false,
-					"includeNullMetadata": true,
-					"instant": false,
-					"legendFormat": "__auto",
-					"range": true,
-					"refId": "B",
-					"useBackend": false
-				},
-				{
-					"datasource": {
-						"type": "prometheus",
-						"uid": "fft5tsgb171fkf"
-					},
-					"disableTextWrap": false,
-					"editorMode": "builder",
-					"expr": "http_server_active_requests",
-					"fullMetaSearch": false,
-					"hide": false,
 					"includeNullMetadata": true,
 					"instant": false,
 					"legendFormat": "__auto",
 					"range": true,
 					"refId": "A",
 					"useBackend": false
+				}
+			],
+			"title": "Throughput",
+			"type": "timeseries"
+		},
+		{
+			"datasource": {
+				"type": "prometheus",
+				"uid": "fft5tsgb171fkf"
+			},
+			"description": "",
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"axisBorderShow": false,
+						"axisCenteredZero": false,
+						"axisColorMode": "text",
+						"axisLabel": "",
+						"axisPlacement": "auto",
+						"barAlignment": 0,
+						"drawStyle": "line",
+						"fillOpacity": 0,
+						"gradientMode": "none",
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						},
+						"insertNulls": false,
+						"lineInterpolation": "linear",
+						"lineWidth": 1,
+						"pointSize": 5,
+						"scaleDistribution": {
+							"type": "linear"
+						},
+						"showPoints": "auto",
+						"spanNulls": false,
+						"stacking": {
+							"group": "A",
+							"mode": "none"
+						},
+						"thresholdsStyle": {
+							"mode": "off"
+						}
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "yellow",
+								"value": 80
+							},
+							{
+								"color": "red",
+								"value": 90
+							}
+						]
+					},
+					"unit": "percent"
 				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 0,
+				"y": 16
+			},
+			"id": 3,
+			"options": {
+				"legend": {
+					"calcs": [],
+					"displayMode": "list",
+					"placement": "bottom",
+					"showLegend": true
+				},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"targets": [
 				{
 					"datasource": {
 						"type": "prometheus",
 						"uid": "fft5tsgb171fkf"
 					},
-					"expr": "",
-					"hide": false,
+					"editorMode": "code",
+					"expr": "sum(rate(http_server_request_duration_seconds_count{http_response_status_code=~\"5..\"}[$__rate_interval])) \r\n/ \r\nsum(rate(http_server_request_duration_seconds_count[$__rate_interval])) * 100",
 					"instant": false,
+					"legendFormat": "__auto",
 					"range": true,
-					"refId": "C"
+					"refId": "A"
 				}
 			],
-			"title": "Panel Title",
+			"title": "Error Rate",
 			"type": "timeseries"
 		}
 	],
-	"refresh": "",
 	"schemaVersion": 39,
 	"tags": [],
 	"templating": {
 		"list": []
 	},
 	"time": {
-		"from": "2026-07-25T11:01:23.532Z",
-		"to": "2026-07-25T11:03:06.740Z"
+		"from": "now-6h",
+		"to": "now"
 	},
 	"timepicker": {},
 	"timezone": "browser",
-	"title": "New dashboard",
-	"uid": "cft63lw1p03r4c",
-	"version": 1,
+	"title": "EventService Dashboard",
+	"uid": "bft6e1co12d4wf",
+	"version": 4,
 	"weekStart": ""
 }
